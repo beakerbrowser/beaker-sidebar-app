@@ -32,6 +32,9 @@ beaker-comments-thread {
   --title-font-size: 12px;
   --footer-font-size: 11px;
   --replies-left-margin: 0;
+  --comment-top-margin: 10px;
+  --comment-left-margin: 8px;
+  --composer-padding: 10px 14px;
 }
 
 .scratchpad textarea {
