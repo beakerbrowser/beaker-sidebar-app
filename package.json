@@ -1,0 +1,19 @@
+{
+  "name": "@beaker/sidebar-app",
+  "version": "0.0.0",
+  "description": "The Beaker \"Side Bar\" app",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/beakerbrowser/beaker-sidebar-app.git"
+  },
+  "author": "Paul Frazee <pfrazee@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/beakerbrowser/beaker-sidebar-app/issues"
+  },
+  "homepage": "https://github.com/beakerbrowser/beaker-sidebar-app#readme"
+}
