@@ -7,19 +7,23 @@ const cssStr = css`
 
 .nav {
   display: flex;
-  background: #fff;
+  background: #f7f7f7;
   border-bottom: 1px solid #ccc;
 }
 
 .nav a {
-  border-right: 1px solid #ccc;
-  padding: 8px 10px;
+  padding: 8px 6px;
+  margin: 0 4px;
   text-decoration: none;
   color: inherit;
 }
 
+.nav a:hover {
+  background: #eee;
+}
+
 .nav a.current {
-  border-bottom: 2px solid #0f8aea;
+  border-bottom: 1px solid #0f8aea;
   padding-bottom: 6px;
 }
 

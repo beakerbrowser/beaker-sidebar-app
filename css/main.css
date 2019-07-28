@@ -5,6 +5,18 @@ body {
   font-size: 12px;
   background: #fff;
   --border-color: #d4d7dc;
-  border-left: 1px solid #999;
+  border-left: 1px solid #ccc;
   min-height: 100vh;
+}
+
+#monaco-editor {
+  height: calc(100vh - 63px);
+}
+
+/* editor style tweaks */
+.monaco-editor .line-numbers {
+  color: #999 !important;
+}
+.monaco-editor .current-line ~ .line-numbers {
+  color: #222 !important;
 }
