@@ -50,6 +50,9 @@ class SidebarEditorView extends LitElement {
     this.dne = false
     this.resolvedPath = ''
 
+    // turn on live-reloading automatically
+    beaker.browser.toggleLiveReloading(true)
+
     document.addEventListener('editor-save', e => {
       this.onClickSave()
     })
