@@ -42,5 +42,9 @@ ${buttonsCSS}
     display: none;
   }
 }
+
+.empty {
+  padding: 10px;
+}
 `
 export default cssStr

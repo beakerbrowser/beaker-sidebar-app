@@ -226,6 +226,14 @@ class SidebarEditorView extends LitElement {
         <button title="Toggle live reloading" @click=${this.onToggleLiveReloading}><span class="fas fa-fw fa-bolt"></span></button>
         <button title="Open in Site Editor" @click=${this.onOpenInSiteEditor}><span class="far fa-fw fa-edit"></span> <span class="btn-label">Open in Site Editor</span></button>
       </div>
+      ${this.dne ? html`
+        <div class="empty">
+          You can create a new page here using
+          <a href="#" @click=${e => this.onClickCreate(e, 'md')}>Markdown</a>
+          or
+          <a href="#" @click=${e => this.onClickCreate(e, 'html')}>HTML</a>.
+        </div>
+      ` : ''}
     `
   }
 
@@ -233,6 +241,7 @@ class SidebarEditorView extends LitElement {
   // =
 
   async onClickCreate (e, ext) {
+    if (e) e.preventDefault()
     if (this.readOnly) return
 
     // figure out a path that works for the given ext
@@ -241,6 +250,8 @@ class SidebarEditorView extends LitElement {
       path = `${path}index.${ext}`
     } else if (path.endsWith(`.${ext}`)) {
       path = path
+    } else if (/.(md|html)$/i.test(path)) {
+      path = `${path.replace(/.(md|html)$/i, '')}.${ext}`
     } else {
       path = `${path}.${ext}`
     }

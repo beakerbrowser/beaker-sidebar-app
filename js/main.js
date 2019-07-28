@@ -30,7 +30,7 @@ class SidebarApp extends LitElement {
     window.sidebarGetCurrentApp = () => this.view
     window.sidebarLoad = (url, app) => {
       this.currentUrl = url
-      this.setView(app)
+      this.setView(app || 'editor')
       this.load()
     }
     window.sidebarShow = () => {
@@ -115,7 +115,7 @@ class SidebarApp extends LitElement {
       return html`
         <div class="scratchpad">
           <textarea
-            placeholder="Anything you enter here will saved privately and automatically."
+            placeholder="Anything you type here will saved automatically."
             @keyup=${this.onKeyupScratchpad}
           >${localStorage.scratchpad}</textarea>
         </div>
