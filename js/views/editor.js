@@ -203,9 +203,10 @@ class SidebarEditorView extends LitElement {
       return html`
         <link rel="stylesheet" href="/vendor/beaker-app-stdlib/css/fontawesome.css">
         <div class="toolbar">
-          <div><span class="fas fa-fw fa-info-circle"></span> This page is not editable</div>
+          <div><span class="fas fa-fw fa-info-circle"></span> This page is read-only</div>
+          ${this.isDat ? html`<button @click=${this.onClickFork}><span class="far fa-fw fa-clone"></span> Make an editable copy</button>` : ''}
           <div class="spacer"></div>
-          ${this.isDat ? html`<button><span class="far fa-fw fa-edit"></span> Open in Site Editor</button>` : ''}
+          ${this.isDat ? html`<button @click=${this.onOpenInSiteEditor}><span class="far fa-fw fa-edit"></span> Open in Site Editor</button>` : ''}
         </div>
       `
     }
@@ -223,7 +224,7 @@ class SidebarEditorView extends LitElement {
           <button title="Save" @click=${this.onClickSave}><span class="fas fa-fw fa-save"></span> <span class="btn-label">Save</span></button>
           <button title="Rename" @click=${this.onClickRename}><span class="fas fa-fw fa-i-cursor"></span> <span class="btn-label">Rename</span></button>
           <button title="Delete" @click=${this.onClickDelete}><span class="fas fa-fw fa-trash"></span> <span class="btn-label">Delete</span></button>
-          <div class="text">${this.resolvedPath || this.pathname}</div>
+          <div class="text path">${this.resolvedPath || this.pathname}</div>
         `}
         <div class="spacer"></div>
         <button title="Toggle live reloading" @click=${this.onToggleLiveReloading}><span class="fas fa-fw fa-bolt"></span></button>
@@ -303,6 +304,15 @@ class SidebarEditorView extends LitElement {
       beaker.browser.gotoUrl(this.url)
       this.load()
     }
+  }
+
+  async onClickFork () {
+    var archive = await DatArchive.fork(this.url)
+    beaker.browser.openUrl(`${archive.url}${this.pathname}`, {
+      setActive: true,
+      isSidebarActive: true,
+      sidebarApp: 'editor'
+    })
   }
 
   onToggleLiveReloading () {

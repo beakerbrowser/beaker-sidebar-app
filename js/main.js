@@ -30,7 +30,7 @@ class SidebarApp extends LitElement {
     window.sidebarGetCurrentApp = () => this.view
     window.sidebarLoad = (url, app) => {
       this.currentUrl = url
-      this.setView(app || 'editor')
+      this.setView(app || this.view || 'editor')
       this.load()
     }
     window.sidebarShow = () => {

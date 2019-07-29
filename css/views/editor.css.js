@@ -33,6 +33,10 @@ ${buttonsCSS}
   text-overflow: ellipsis;
 }
 
+.toolbar .text.path {
+  margin-left: 8px;
+}
+
 .toolbar .spacer {
   flex: 1;
 }
