@@ -12,8 +12,10 @@ const cssStr = css`
 }
 
 .nav a {
-  padding: 8px 6px;
-  margin: 0 4px;
+  padding: 8px 8px 6px;
+  margin: 0 2px;
+  border: 1px solid transparent;
+  border-top: 0;
   text-decoration: none;
   color: inherit;
 }
@@ -23,8 +25,22 @@ const cssStr = css`
 }
 
 .nav a.current {
-  border-bottom: 1px solid #0f8aea;
-  padding-bottom: 6px;
+/*  border-bottom: 1px solid #0f8aea;*/
+  border-left: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  background: #fff;
+  position: relative;
+}
+
+.nav a.current:after {
+  content: '';
+  display: block;
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: white;
 }
 
 beaker-comments-thread {

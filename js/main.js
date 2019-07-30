@@ -4,6 +4,7 @@ import { profiles, follows, posts, comments, reactions } from 'dat://unwalled.ga
 import * as toast from '/vendor/beaker-app-stdlib/js/com/toast.js'
 import sidebarAppCSS from '../css/main.css.js'
 import '/vendor/beaker-app-stdlib/js/com/comments/thread.js'
+import './views/files.js'
 import './views/editor.js'
 
 class SidebarApp extends LitElement {
@@ -20,17 +21,21 @@ class SidebarApp extends LitElement {
     super()
 
     this.currentUrl = ''
-    this.view = 'editor'
+    this.view = 'site'
     this.user = null
     this.followedUsers = []
     this.comments = []
     this.commentCount = 0
 
+    document.body.addEventListener('contextmenu', e => {
+      e.preventDefault()
+    })
+
     // export an API which is called by the browser
     window.sidebarGetCurrentApp = () => this.view
     window.sidebarLoad = (url, app) => {
       this.currentUrl = url
-      this.setView(app || this.view || 'editor')
+      this.setView(app || this.view || 'site')
       this.load()
     }
     window.sidebarShow = () => {
@@ -80,9 +85,10 @@ class SidebarApp extends LitElement {
     return html`
       <link rel="stylesheet" href="/vendor/beaker-app-stdlib/css/fontawesome.css">
       <div class="nav">
-        ${navItem('editor', `Editor`)}
-        ${navItem('comments', `Comments (${this.commentCount})`)}
-        ${navItem('scratchpad', `Scratchpad`)}
+        ${navItem('site', html`<span class="fas fa-fw fa-info"></span> Site`)}
+        ${navItem('files', html`<span class="far fa-fw fa-file"></span> Files`)}
+        ${navItem('editor', html`<span class="far fa-fw fa-edit"></span> Editor`)}
+        ${navItem('comments', html`<span class="far fa-fw fa-comment-alt"></span> Comments (${this.commentCount})`)}
         <a href="#" @click=${this.onClickClose} style="margin-left: auto"><span class="fas fa-fw fa-times"></span></a>
       </div>
       ${this.renderView()}
@@ -90,6 +96,13 @@ class SidebarApp extends LitElement {
   }
 
   renderView () {
+    if (this.view === 'files') {
+      return html`
+        <sidebar-files-view
+          url=${this.currentUrl}
+        ></sidebar-files-view>
+      `
+    }
     if (this.view === 'editor') {
       return html`
         <sidebar-editor-view
