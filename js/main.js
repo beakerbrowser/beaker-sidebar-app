@@ -4,6 +4,7 @@ import { profiles, follows, posts, comments, reactions } from 'dat://unwalled.ga
 import * as toast from '/vendor/beaker-app-stdlib/js/com/toast.js'
 import sidebarAppCSS from '../css/main.css.js'
 import '/vendor/beaker-app-stdlib/js/com/comments/thread.js'
+import './views/site.js'
 import './views/files.js'
 import './views/editor.js'
 
@@ -20,6 +21,7 @@ class SidebarApp extends LitElement {
   constructor () {
     super()
 
+    this.isLoading = true
     this.currentUrl = ''
     this.view = 'site'
     this.user = null
@@ -28,7 +30,7 @@ class SidebarApp extends LitElement {
     this.commentCount = 0
 
     document.body.addEventListener('contextmenu', e => {
-      e.preventDefault()
+      // e.preventDefault() RESTOREME
     })
 
     // export an API which is called by the browser
@@ -52,6 +54,7 @@ class SidebarApp extends LitElement {
   }
 
   async load () {
+    this.isLoading = true
     if (!this.user) {
       this.user = await profiles.me()
     }
@@ -62,6 +65,7 @@ class SidebarApp extends LitElement {
     await loadCommentReactions(this.feedAuthors, cs)
     this.comments = cs
     
+    this.isLoading = false
     this.requestUpdate()
   }
 
@@ -78,7 +82,7 @@ class SidebarApp extends LitElement {
   // =
 
   render () {
-    if (!this.user) return html`<div></div>`
+    if (!this.user || this.isLoading) return html`<div></div>`
     const navItem = (id, label) => html`
       <a href="#" class="${classMap({current: id === this.view})}" @click=${e => this.onClickNavItem(e, id)}>${label}</a>
     `
@@ -96,6 +100,15 @@ class SidebarApp extends LitElement {
   }
 
   renderView () {
+    if (this.view === 'site') {
+      return html`
+        <sidebar-site-view
+          url=${this.currentUrl}
+          .user=${this.user}
+          .feedAuthors=${this.feedAuthors}
+        ></sidebar-site-view>
+      `
+    }
     if (this.view === 'files') {
       return html`
         <sidebar-files-view
@@ -134,6 +147,7 @@ class SidebarApp extends LitElement {
         </div>
       `
     }
+    return html`todo`
   }
 
   // events

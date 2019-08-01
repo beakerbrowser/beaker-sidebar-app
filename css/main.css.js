@@ -12,8 +12,7 @@ const cssStr = css`
 }
 
 .nav a {
-  padding: 8px 8px 6px;
-  margin: 0 2px;
+  padding: 8px 10px 6px;
   border: 1px solid transparent;
   border-top: 0;
   text-decoration: none;
@@ -25,7 +24,6 @@ const cssStr = css`
 }
 
 .nav a.current {
-/*  border-bottom: 1px solid #0f8aea;*/
   border-left: 1px solid #ccc;
   border-right: 1px solid #ccc;
   background: #fff;
@@ -41,6 +39,10 @@ const cssStr = css`
   right: 0;
   height: 2px;
   background: white;
+}
+
+.nav a:first-child {
+  border-left: 0;
 }
 
 beaker-comments-thread {

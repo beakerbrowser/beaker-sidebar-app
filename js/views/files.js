@@ -73,10 +73,14 @@ class SidebarFilesView extends LitElement {
       let info = await archive.getInfo()
       this.readOnly = !info.isOwner
 
+      let st
       let folderPath = this.pathname
-      let st = await archive.stat(folderPath)
-      if (!st.isDirectory()) {
-        folderPath = (folderPath.split('/').slice(0, -1).filter(Boolean).join('/')) || '/'
+      while (!st && folderPath !== '/') {
+        try { st = await archive.stat(folderPath) }
+        catch (e) {/* ignore */}
+        if (!st || !st.isDirectory()) {
+          folderPath = (folderPath.split('/').slice(0, -1).filter(Boolean).join('/')) || '/'
+        }
       }
       this.folderPath = folderPath
 
@@ -118,9 +122,9 @@ class SidebarFilesView extends LitElement {
         ${this.readOnly ? html `
           <div><span class="fas fa-fw fa-info-circle"></span> This site is read-only</div>
         ` : html`
-          <button @click=${this.onClickNewFolder}><span class="fa-fw far fa-folder"></span> <span class="btn-label">New folder</span></button>
-          <button @click=${this.onClickNewFile}><span class="fa-fw far fa-file"></span> <span class="btn-label">New file</span></button>
-          <button @click=${this.onClickImportFiles}><span class="fa-fw fas fa-upload"></span> <span class="btn-label">Import files</span></button>
+          <button class="transparent" @click=${this.onClickNewFolder}><span class="fa-fw far fa-folder"></span> <span class="btn-label">New folder</span></button>
+          <button class="transparent" @click=${this.onClickNewFile}><span class="fa-fw far fa-file"></span> <span class="btn-label">New file</span></button>
+          <button class="transparent" @click=${this.onClickImportFiles}><span class="fa-fw fas fa-upload"></span> <span class="btn-label">Import files</span></button>
         `}
       </div>
       <div class="listing" @contextmenu=${this.onContextmenuListing}>

@@ -204,9 +204,9 @@ class SidebarEditorView extends LitElement {
         <link rel="stylesheet" href="/vendor/beaker-app-stdlib/css/fontawesome.css">
         <div class="toolbar">
           <div><span class="fas fa-fw fa-info-circle"></span> This page is read-only</div>
-          ${this.isDat ? html`<button @click=${this.onClickFork}><span class="far fa-fw fa-clone"></span> Make an editable copy</button>` : ''}
+          ${this.isDat ? html`<button class="transparent" @click=${this.onClickFork}><span class="far fa-fw fa-clone"></span> Make an editable copy</button>` : ''}
           <div class="spacer"></div>
-          ${this.isDat ? html`<button @click=${this.onOpenInSiteEditor}><span class="far fa-fw fa-edit"></span> Open in Site Editor</button>` : ''}
+          ${this.isDat ? html`<button class="transparent" @click=${this.onOpenInSiteEditor}><span class="far fa-fw fa-edit"></span> Open in Site Editor</button>` : ''}
         </div>
       `
     }
@@ -218,16 +218,16 @@ class SidebarEditorView extends LitElement {
       <div class="toolbar">
         ${this.dne ? html`
           <div class="text">Create page:</div>
-          <button title="Create a markdown page" @click=${e => this.onClickCreate(e, 'md')}>Markdown</button>
-          <button title="Create an HTML page" @click=${e => this.onClickCreate(e, 'html')}>HTML</button>
+          <button class="transparent" title="Create a markdown page" @click=${e => this.onClickCreate(e, 'md')}>Markdown</button>
+          <button class="transparent" title="Create an HTML page" @click=${e => this.onClickCreate(e, 'html')}>HTML</button>
         ` : html`
-          <button title="Save" @click=${this.onClickSave}><span class="fas fa-fw fa-save"></span> <span class="btn-label">Save</span></button>
-          <button title="Rename" @click=${this.onClickRename}><span class="fas fa-fw fa-i-cursor"></span> <span class="btn-label">Rename</span></button>
-          <button title="Delete" @click=${this.onClickDelete}><span class="fas fa-fw fa-trash"></span> <span class="btn-label">Delete</span></button>
+          <button class="transparent" title="Save" @click=${this.onClickSave}><span class="fas fa-fw fa-save"></span> <span class="btn-label">Save</span></button>
+          <button class="transparent" title="Rename" @click=${this.onClickRename}><span class="fas fa-fw fa-i-cursor"></span> <span class="btn-label">Rename</span></button>
+          <button class="transparent" title="Delete" @click=${this.onClickDelete}><span class="fas fa-fw fa-trash"></span> <span class="btn-label">Delete</span></button>
         `}
         <div class="spacer"></div>
-        <button title="Toggle live reloading" @click=${this.onToggleLiveReloading}><span class="fas fa-fw fa-bolt"></span></button>
-        <button title="Open in Site Editor" @click=${this.onOpenInSiteEditor}><span class="far fa-fw fa-edit"></span> <span class="btn-label">Open in Site Editor</span></button>
+        <button class="transparent" title="Toggle live reloading" @click=${this.onToggleLiveReloading}><span class="fas fa-fw fa-bolt"></span></button>
+        <button class="transparent" title="Open in Site Editor" @click=${this.onOpenInSiteEditor}><span class="far fa-fw fa-edit"></span> <span class="btn-label">Open in Site Editor</span></button>
       </div>
       ${this.dne ? html`
         <div class="empty">
