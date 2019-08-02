@@ -245,9 +245,7 @@ class SidebarSiteView extends LitElement {
 
   render () {
     if (this.isLoading) {
-      return html`
-        <div>Loading...</div>
-      `
+      return html`<div></div>`
     }
     return html`
       <link rel="stylesheet" href="/vendor/beaker-app-stdlib/css/fontawesome.css">
@@ -363,7 +361,7 @@ class SidebarSiteView extends LitElement {
         <div class="field-group">
           <div class="field-group-title">Dat</div>
           <p>
-            This website was served over the peer-to-peer network.
+            This website is served over the peer-to-peer network.
             ${this.info.peers} ${pluralize(this.info.peers, 'peer')}
             are currently connected.
           </p>
@@ -373,7 +371,7 @@ class SidebarSiteView extends LitElement {
         <div class="field-group">
           <div class="field-group-title">HTTPS</div>
           <p>
-            This website was served over a secure connection.
+            This website is served over a secure connection.
           </p>
         </div>
       ` : ''}

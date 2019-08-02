@@ -76,6 +76,7 @@ class SidebarApp extends LitElement {
     } else {
       document.querySelector('#monaco-editor').style.display = 'none'
     }
+    document.querySelector('#monaco-diff-editor').style.display = 'none'
   }
 
   // rendering

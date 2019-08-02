@@ -9,8 +9,9 @@ body {
   min-height: 100vh;
 }
 
-#monaco-editor {
-  height: calc(100vh - 63px);
+#monaco-editor,
+#monaco-diff-editor {
+  height: calc(100vh - 63px - 32px);
 }
 
 /* editor style tweaks */
