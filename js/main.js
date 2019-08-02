@@ -30,7 +30,7 @@ class SidebarApp extends LitElement {
     this.commentCount = 0
 
     document.body.addEventListener('contextmenu', e => {
-      // e.preventDefault() RESTOREME
+      e.preventDefault()
     })
 
     // export an API which is called by the browser

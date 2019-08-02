@@ -292,7 +292,6 @@ class SidebarSiteView extends LitElement {
           `}
           ${this.isPerson ? html`<p><span class="far fa-fw fa-user-circle"></span> Personal website</p>` : ''}
           ${this.isApplication ? html`<p><span class="far fa-fw fa-window-restore"></span> Application</p>` : ''}
-          ${this.isHttps || this.isHttp ? html`<p><span class="fas fa-fw fa-server"></span> Hosted website</p>` : ''}
           ${this.isBeaker ? html`<p><img src="beaker://assets/logo.png" style="width: 16px; position: relative; top: 4px"> Beaker Application</p>` : ''}
           ${this.isDat
             ? this.readOnly
