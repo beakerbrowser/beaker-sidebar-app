@@ -60,7 +60,7 @@ class SidebarApp extends LitElement {
     }
     this.followedUsers = (await follows.list({filters: {authors: this.user.url}})).map(({topic}) => topic.url)
 
-    var cs = await comments.thread(this.currentUrl, {filters: {authors: this.feedAuthors}})
+    var cs = await comments.thread(this.currentUrl.replace('+preview', ''), {filters: {authors: this.feedAuthors}})
     this.commentCount = countComments(cs)
     await loadCommentReactions(this.feedAuthors, cs)
     this.comments = cs
