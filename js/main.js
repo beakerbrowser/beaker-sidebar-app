@@ -114,6 +114,7 @@ class SidebarApp extends LitElement {
       return html`
         <sidebar-files-view
           url=${this.currentUrl}
+          @request-view=${this.onRequestView}
         ></sidebar-files-view>
       `
     }
@@ -162,6 +163,10 @@ class SidebarApp extends LitElement {
 
   onClickClose () {
     beaker.browser.toggleSidebar()
+  }
+
+  onRequestView (e) {
+    this.setView(e.detail.view)
   }
 
   onKeyupScratchpad (e) {

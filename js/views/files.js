@@ -4,6 +4,7 @@ import { format as formatBytes } from '/vendor/beaker-app-stdlib/vendor/bytes/in
 import * as contextMenu from '/vendor/beaker-app-stdlib/js/com/context-menu.js'
 import * as toast from '/vendor/beaker-app-stdlib/js/com/toast.js'
 import { joinPath } from '/vendor/beaker-app-stdlib/js/strings.js'
+import { emit } from '/vendor/beaker-app-stdlib/js/dom.js'
 import { writeToClipboard } from '/vendor/beaker-app-stdlib/js/clipboard.js'
 import sidebarFilesViewCSS from '../../css/views/files.css.js'
 
@@ -247,6 +248,10 @@ class SidebarFilesView extends LitElement {
 
   onClickItem (e, item) {
     beaker.browser.gotoUrl(joinPath(this.origin, this.folderPath, item.name))
+    if (item.stat.isFile()) {
+      // go to the editor
+      emit(this, 'request-view', {detail: {view: 'editor'}, bubbles: true, composed: true})
+    }
   }
 
   async onClickNewFolder (e) {
