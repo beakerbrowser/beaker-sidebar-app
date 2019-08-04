@@ -100,8 +100,9 @@ class SidebarEditorView extends LitElement {
     if (!editor) return
     var url = this.url || ''
 
-    if (editor.getModel()) {
-      editor.getModel().dispose()
+    // reset the editor
+    for (let model of monaco.editor.getModels()) {
+      model.dispose()
     }
 
     console.log('Loading', url)
