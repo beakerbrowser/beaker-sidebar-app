@@ -344,7 +344,7 @@ class SidebarSiteView extends LitElement {
           <div class="field-group-title"><span class="fas fa-fw fa-exclamation-triangle"></span> Domain issue</div>
           <p>
             This site has not confirmed <code>${this.hostname}</code> as its primary domain.
-            It's safe to view but you will not be able to follow it, install it, or use its advanced features.
+            It's safe to view but you will not be able to follow it or use its advanced features.
           </p>
         </div>
       ` : ''}
@@ -392,7 +392,7 @@ class SidebarSiteView extends LitElement {
         ></sidebar-revisions>
       ` : ''}
       ${this.renderFollowers()}
-      ${this.renderFollowers()}
+      ${this.renderFollows()}
       ${!this.readOnly ? html`
         <div class="field-group">
           <div class="field-group-title">Admin</div>

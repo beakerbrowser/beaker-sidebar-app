@@ -62,10 +62,6 @@ class SidebarEditorView extends LitElement {
     // turn on live-reloading automatically
     beaker.browser.toggleLiveReloading(true)
 
-    document.addEventListener('editor-save', e => {
-      this.onClickSave()
-    })
-
     // load monaco
     if (!editor) {
       require.config({ baseUrl: 'beaker://assets/' });
@@ -83,7 +79,7 @@ class SidebarEditorView extends LitElement {
         }
         editor = monaco.editor.create(document.querySelector('#monaco-editor'), opts)
         editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S, function () {
-          document.dispatchEvent(new Event('editor-save'))
+          document.querySelector('sidebar-app').shadowRoot.querySelector('sidebar-editor-view').onClickSave()
         })
         diffEditor = monaco.editor.createDiffEditor(document.querySelector('#monaco-diff-editor'), Object.assign({}, opts, {readOnly: true}))
         this.load()
