@@ -1,5 +1,6 @@
 import { LitElement, html } from '/vendor/beaker-app-stdlib/vendor/lit-element/lit-element.js'
 import sidebarEditorViewCSS from '../../css/views/editor.css.js'
+import BIN_EXTS from '../binary-extensions.js'
 import '../com/files.js'
 
 var editor // monaco instance
@@ -13,6 +14,7 @@ class SidebarEditorView extends LitElement {
       isFilesOpen: {type: Boolean},
       readOnly: {type: Boolean},
       dne: {type: Boolean},
+      isBinary: {type: Boolean},
       previewChange: {type: String}
     }
   }
@@ -60,6 +62,7 @@ class SidebarEditorView extends LitElement {
     this.previewMode = false
     this.previewChange = false
     this.dne = false
+    this.isBinary = false
     this.resolvedPath = ''
 
     // turn on live-reloading automatically
@@ -116,6 +119,7 @@ class SidebarEditorView extends LitElement {
     this.previewMode = false
     this.previewChange = false
     this.dne = false
+    this.isBinary = false
     this.resolvedPath = ''
 
     var body = ''
@@ -147,15 +151,24 @@ class SidebarEditorView extends LitElement {
       // determine the entry to load
       var entry = await window.datServeResolvePath(archive, manifest, this.url, '*/*')
       this.resolvedPath = entry ? entry.path : this.pathname
-      console.debug('Resolved', this.url, 'to', this.resolvedPath, entry)
+
+      // figure out if it's binary
+      {
+        let filename = this.resolvedPath.split('/').pop()
+        if (filename.includes('.') && BIN_EXTS.includes(filename.split('.').pop())) {
+          this.isBinary = true
+        }
+      }
 
       // fetch the file
-      try {
-        if (!this.resolvedPath) throw 'dne'
-        body = await archive.readFile(this.resolvedPath, 'utf8')
-      } catch (e) {
-        this.dne = true
-        body = ''
+      if (!this.isBinary) {
+        try {
+          if (!this.resolvedPath) throw 'dne'
+          body = await archive.readFile(this.resolvedPath, 'utf8')
+        } catch (e) {
+          this.dne = true
+          body = ''
+        }
       }
 
       // grab the diff if this is preview mode
@@ -177,7 +190,7 @@ class SidebarEditorView extends LitElement {
       }
     }
 
-    if (!this.dne) {
+    if (!this.dne && !this.isBinary) {
       // create a model
       let urlp2 = new URL(url)
       urlp2.pathname = this.resolvedPath || this.pathname
@@ -265,6 +278,11 @@ class SidebarEditorView extends LitElement {
           ${this.isDat ? html`<button class="transparent" @click=${this.onOpenInSiteEditor}><span class="far fa-fw fa-edit"></span> Open in Site Editor</button>` : ''}
         </div>
         ${this.isFilesOpen ? this.renderFilesSidebar() : ''}
+        ${this.isBinary ? html`
+          <div class="empty">
+            Binary file
+          </div>
+        ` : ''}
         <footer>${this.resolvedPath}</footer>
       `
     }
@@ -290,7 +308,7 @@ class SidebarEditorView extends LitElement {
           <button class="transparent" ?disabled=${!this.previewChange} @click=${this.onClickPublish}>
             <span class="fas fa-fw fa-check"></span> ${this.previewChange === 'del' ? 'Confirm delete' : 'Publish'}
           </button>
-          <button class="transparent ${this.isDiffing ? 'pressed' : ''}" ?disabled=${!this.previewChange} @click=${this.onClickToggleDiff}>
+          <button class="transparent ${this.isDiffing ? 'pressed' : ''}" ?disabled=${!this.previewChange || this.isBinary} @click=${this.onClickToggleDiff}>
             <span class="fas fa-fw fa-columns"></span> Diff
           </button>
           <button class="transparent" ?disabled=${!this.previewChange} @click=${this.onClickRevert}>
@@ -305,6 +323,11 @@ class SidebarEditorView extends LitElement {
           @click=${this.onToggleLiveReloading}
         ><span class="fas fa-fw fa-bolt"></span></button>
       </div>
+      ${this.isBinary ? html`
+        <div class="empty">
+          Binary file
+        </div>
+      ` : ''}
       ${this.dne && !this.isDiffing ? html`
         <div class="empty">
           ${this.hasFileExt ? html`
@@ -420,6 +443,7 @@ class SidebarEditorView extends LitElement {
   }
 
   onClickToggleDiff () {
+    if (this.isBinary) return // dont diff binary
     this.setDiffMode(!this.isDiffing)
   }
 
