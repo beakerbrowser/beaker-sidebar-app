@@ -5,7 +5,6 @@ import * as toast from '/vendor/beaker-app-stdlib/js/com/toast.js'
 import sidebarAppCSS from '../css/main.css.js'
 import '/vendor/beaker-app-stdlib/js/com/comments/thread.js'
 import './views/site.js'
-import './views/files.js'
 import './views/editor.js'
 
 class SidebarApp extends LitElement {
@@ -91,7 +90,6 @@ class SidebarApp extends LitElement {
       <link rel="stylesheet" href="/vendor/beaker-app-stdlib/css/fontawesome.css">
       <div class="nav">
         ${navItem('site', html`<span class="fas fa-fw fa-info"></span> Site`)}
-        ${navItem('files', html`<span class="far fa-fw fa-file"></span> Files`)}
         ${navItem('editor', html`<span class="far fa-fw fa-edit"></span> Editor`)}
         ${navItem('comments', html`<span class="far fa-fw fa-comment-alt"></span> Comments (${this.commentCount})`)}
         <a href="#" @click=${this.onClickClose} style="margin-left: auto"><span class="fas fa-fw fa-times"></span></a>
@@ -108,14 +106,6 @@ class SidebarApp extends LitElement {
           .user=${this.user}
           .feedAuthors=${this.feedAuthors}
         ></sidebar-site-view>
-      `
-    }
-    if (this.view === 'files') {
-      return html`
-        <sidebar-files-view
-          url=${this.currentUrl}
-          @request-view=${this.onRequestView}
-        ></sidebar-files-view>
       `
     }
     if (this.view === 'editor') {

@@ -1,5 +1,6 @@
 import { LitElement, html } from '/vendor/beaker-app-stdlib/vendor/lit-element/lit-element.js'
 import sidebarEditorViewCSS from '../../css/views/editor.css.js'
+import '../com/files.js'
 
 var editor // monaco instance
 var diffEditor // monaco diff instance
@@ -9,6 +10,7 @@ class SidebarEditorView extends LitElement {
     return {
       url: {type: String},
       isLoading: {type: Boolean},
+      isFilesOpen: {type: Boolean},
       readOnly: {type: Boolean},
       dne: {type: Boolean},
       previewChange: {type: String}
@@ -53,6 +55,7 @@ class SidebarEditorView extends LitElement {
     super()
     this.url = ''
     this.isLoading = true
+    this.isFilesOpen = false
     this.readOnly = true
     this.previewMode = false
     this.previewChange = false
@@ -255,17 +258,20 @@ class SidebarEditorView extends LitElement {
       return html`
         <link rel="stylesheet" href="/vendor/beaker-app-stdlib/css/fontawesome.css">
         <div class="toolbar">
+          ${this.isDat ? this.renderToolbarFiles() : ''}
           <div><span class="fas fa-fw fa-info-circle"></span> This page is read-only</div>
           ${this.isDat ? html`<button class="transparent" @click=${this.onClickFork}><span class="far fa-fw fa-clone"></span> Make an editable copy</button>` : ''}
           <div class="spacer"></div>
           ${this.isDat ? html`<button class="transparent" @click=${this.onOpenInSiteEditor}><span class="far fa-fw fa-edit"></span> Open in Site Editor</button>` : ''}
         </div>
+        ${this.isFilesOpen ? this.renderFilesSidebar() : ''}
         <footer>${this.resolvedPath}</footer>
       `
     }
     return html`
       <link rel="stylesheet" href="/vendor/beaker-app-stdlib/css/fontawesome.css">
       <div class="toolbar">
+        ${this.renderToolbarFiles()}
         ${this.dne ? html`
           <div style="padding: 0 5px">
             <span class="fas fa-fw fa-info-circle"></span>
@@ -311,12 +317,34 @@ class SidebarEditorView extends LitElement {
           `}
         </div>
       ` : ''}
+      ${this.isFilesOpen ? this.renderFilesSidebar() : ''}
       <footer>${this.resolvedPath}</footer>
+    `
+  }
+
+  renderToolbarFiles () {
+    return html`
+      <button class="transparent ${this.isFilesOpen ? 'pressed' : ''}" @click=${this.onToggleFilesOpen}>
+        <span class="fas fa-fw fa-sitemap"></span> <span class="btn-label">Files</span>
+      </button>
+      <span class="divider"></span>
+    `
+  }
+
+  renderFilesSidebar () {
+    return html`
+      <sidebar-files
+        url=${this.url}
+      ></sidebar-files>
     `
   }
 
   // events
   // =
+
+  onToggleFilesOpen () {
+    this.isFilesOpen = !this.isFilesOpen
+  }
 
   async onClickCreate (e, ext) {
     if (e) e.preventDefault()

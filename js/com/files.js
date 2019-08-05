@@ -6,12 +6,12 @@ import * as toast from '/vendor/beaker-app-stdlib/js/com/toast.js'
 import { joinPath } from '/vendor/beaker-app-stdlib/js/strings.js'
 import { emit } from '/vendor/beaker-app-stdlib/js/dom.js'
 import { writeToClipboard } from '/vendor/beaker-app-stdlib/js/clipboard.js'
-import sidebarFilesViewCSS from '../../css/views/files.css.js'
+import sidebarFilesViewCSS from '../../css/com/files.css.js'
 
-class SidebarFilesView extends LitElement {
+class SidebarFiles extends LitElement {
   static get properties () {
     return {
-      url: {type: String},
+      url: {type: String, reflect: true},
       isLoading: {type: Boolean},
       readOnly: {type: Boolean},
       items: {type: Array}
@@ -92,7 +92,6 @@ class SidebarFilesView extends LitElement {
         return a.name.localeCompare(b.name)
       })
     }
-    console.log({items})
 
     this.items = items
     this.isLoading = false
@@ -123,9 +122,9 @@ class SidebarFilesView extends LitElement {
         ${this.readOnly ? html `
           <div><span class="fas fa-fw fa-info-circle"></span> This site is read-only</div>
         ` : html`
-          <button class="transparent" @click=${this.onClickNewFolder}><span class="fa-fw far fa-folder"></span> <span class="btn-label">New folder</span></button>
-          <button class="transparent" @click=${this.onClickNewFile}><span class="fa-fw far fa-file"></span> <span class="btn-label">New file</span></button>
-          <button class="transparent" @click=${this.onClickImportFiles}><span class="fa-fw fas fa-upload"></span> <span class="btn-label">Import files</span></button>
+          <button class="transparent" @click=${this.onClickNewFolder}><span class="fa-fw far fa-folder"></span> New folder</button>
+          <button class="transparent" @click=${this.onClickNewFile}><span class="fa-fw far fa-file"></span> New file</button>
+          <button class="transparent" @click=${this.onClickImportFiles}><span class="fa-fw fas fa-upload"></span> Import</button>
         `}
       </div>
       <div class="listing" @contextmenu=${this.onContextmenuListing}>
@@ -243,14 +242,16 @@ class SidebarFilesView extends LitElement {
 
   onClickUpdog (e) {
     var upPath = this.folderPath.split('/').filter(Boolean).slice(0, -1).join('/')
-    beaker.browser.gotoUrl(joinPath(this.origin, upPath))
+    this.url = joinPath(this.origin, upPath)
   }
 
   onClickItem (e, item) {
-    beaker.browser.gotoUrl(joinPath(this.origin, this.folderPath, item.name))
     if (item.stat.isFile()) {
-      // go to the editor
-      emit(this, 'request-view', {detail: {view: 'editor'}, bubbles: true, composed: true})
+      // open the file
+      beaker.browser.gotoUrl(joinPath(this.origin, this.folderPath, item.name))
+    } else {
+      // navigate in-UI to the folder
+      this.url = joinPath(this.origin, this.folderPath, item.name)
     }
   }
 
@@ -299,4 +300,4 @@ class SidebarFilesView extends LitElement {
   }
 }
 
-customElements.define('sidebar-files-view', SidebarFilesView)
+customElements.define('sidebar-files', SidebarFiles)

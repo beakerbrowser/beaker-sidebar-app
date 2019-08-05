@@ -33,6 +33,17 @@ ${tooltipCSS}
 .revision-indicator.mod { background: #fac800; }
 .revision-indicator.del { background: #d93229; }
 
+sidebar-files {
+  position: fixed;
+  left: 1px;
+  top: 62px;
+  bottom: 32px;
+  width: 284px;
+  z-index: 1;
+  background: #fff;
+  border-right: 1px solid #ccc;
+}
+
 footer {
   position: fixed;
   bottom: 0;

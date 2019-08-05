@@ -358,12 +358,8 @@ class SidebarSiteView extends LitElement {
       ` : ''}
       ${this.isDat ? html`
         <div class="field-group">
-          <div class="field-group-title">Dat</div>
-          <p>
-            This website is served over the peer-to-peer network.
-            ${this.info.peers} ${pluralize(this.info.peers, 'peer')}
-            are currently connected.
-          </p>
+          <div class="field-group-title">Dat network</div>
+          <p>${this.info.peers} ${pluralize(this.info.peers, 'peer')} connected.</p>
         </div>
       ` : ''}
       ${this.isHttps ? html`
