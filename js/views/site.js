@@ -1,10 +1,7 @@
 import { LitElement, html } from '/vendor/beaker-app-stdlib/vendor/lit-element/lit-element.js'
 import { repeat } from '/vendor/beaker-app-stdlib/vendor/lit-element/lit-html/directives/repeat.js'
-import { format as formatBytes } from '/vendor/beaker-app-stdlib/vendor/bytes/index.js'
-import * as contextMenu from '/vendor/beaker-app-stdlib/js/com/context-menu.js'
 import * as toast from '/vendor/beaker-app-stdlib/js/com/toast.js'
 import { pluralize } from '/vendor/beaker-app-stdlib/js/strings.js'
-import { writeToClipboard } from '/vendor/beaker-app-stdlib/js/clipboard.js'
 import { follows } from 'dat://unwalled.garden/index.js'
 import sidebarSiteViewCSS from '../../css/views/site.css.js'
 import '../com/app-perm-settings.js'
@@ -26,7 +23,6 @@ class SidebarSiteView extends LitElement {
       info: {type: Object},
       manifest: {type: Object},
       requestedPerms: {type: Object},
-      appInfo: {type: Object},
       followers: {type: Array},
       follows: {type: Array},
       currentDiff: {type: Object}
@@ -76,12 +72,8 @@ class SidebarSiteView extends LitElement {
     return this.isDat && this.info && this.info.type.includes('unwalled.garden/person')
   }
 
-  get isApplication () {
-    return this.isDat && this.info && this.info.type.includes('application')
-  }
-
   get isWebsite () {
-    return this.isDat && this.info && (!this.info.type.includes('unwalled.garden/person') && !this.info.type.includes('application'))
+    return this.isDat && this.info && (!this.info.type.includes('unwalled.garden/person'))
   }
 
   get isLocalUser () {
@@ -118,7 +110,6 @@ class SidebarSiteView extends LitElement {
     this.info = null
     this.manifest = null
     this.requestedPerms = null
-    this.appInfo = null
     this.followers = null
     this.follows = null
     this.currentDiff = null
@@ -147,7 +138,6 @@ class SidebarSiteView extends LitElement {
     this.currentSection = section
     this.info = {}
     this.manifest = null
-    this.appInfo = null
     this.followers = null
     this.follows = null
     this.currentDiff = null
@@ -171,11 +161,6 @@ class SidebarSiteView extends LitElement {
         this.manifest = JSON.parse(await archive.readFile('/dat.json', 'utf8'))
       } catch (e) {
         this.manifest = {}
-      }
-
-      // read app data
-      if (this.isApplication) {
-        this.appInfo = await beaker.applications.getInfo(this.origin)
       }
 
       // read person data
@@ -291,7 +276,6 @@ class SidebarSiteView extends LitElement {
             </h1>
           `}
           ${this.isPerson ? html`<p><span class="far fa-fw fa-user-circle"></span> Personal website</p>` : ''}
-          ${this.isApplication ? html`<p><span class="far fa-fw fa-window-restore"></span> Application</p>` : ''}
           ${this.isBeaker ? html`<p><img src="beaker://assets/logo.png" style="width: 16px; position: relative; top: 4px"> Beaker Application</p>` : ''}
           ${this.isDat
             ? this.readOnly
@@ -407,13 +391,6 @@ class SidebarSiteView extends LitElement {
         origin=${this.origin}
         .perms=${this.requestedPerms}
       ></sidebar-requested-perms>
-      ${this.isApplication ? html`
-        <sidebar-app-perm-settings
-          .manifest=${this.manifest}
-          ?readOnly=${this.readOnly}
-          @toggle-app-perm=${this.onToggleAppPerm}
-        ></sidebar-app-perm-settings>
-      ` : ''}
     `)
   }
 
@@ -461,22 +438,6 @@ class SidebarSiteView extends LitElement {
           <button class="primary" ?disabled=${disabled} @click=${this.onClickFollow}>
             <span class="fas fa-fw fa-rss"></span>
             Follow ${this.info.title || 'this site'}
-          </button>
-        `
-      }
-    } else if (this.isApplication) {
-      if (this.appInfo.installed) {
-        typeBtn = html`
-          <button class="transparent" ?disabled=${disabled} @click=${this.onClickUninstall}>
-            <span class="fas fa-fw fa-ban"></span>
-            Uninstall ${this.info.title || 'this application'}
-          </button>
-        `
-      } else {
-        typeBtn = html`
-          <button class="primary" ?disabled=${disabled} @click=${this.onClickInstall}>
-            <span class="fas fa-fw fa-download"></span>
-            Install ${this.info.title || 'this application'}
           </button>
         `
       }
@@ -644,19 +605,6 @@ class SidebarSiteView extends LitElement {
     this.load()
   }
 
-  async onClickInstall (e) {
-    if (await beaker.applications.requestInstall(this.origin)) {
-      this.load()
-      beaker.browser.gotoUrl(this.url) // refresh page
-    }
-  }
-
-  async onClickUninstall () {
-    beaker.applications.uninstall(this.origin)
-    this.load()
-    beaker.browser.gotoUrl(this.url) // refresh page
-  }
-
   async onClickFollow () {
     await follows.add(this.origin)
     this.load()
@@ -687,21 +635,6 @@ class SidebarSiteView extends LitElement {
       toast.create(e.toString(), 'error', 5e3)
       console.error(e)
     }
-  }
-
-  onToggleAppPerm (e) {
-    var {perm, id, enabled} = e.detail
-    this.updateManifest(manifest => {
-      manifest.application = manifest.application || {}
-      manifest.application.permissions = manifest.application.permissions || {}
-      var s = new Set(manifest.application.permissions[perm] || [])
-      if (enabled) {
-        s.add(id)
-      } else {
-        s.delete(id)
-      }
-      manifest.application.permissions[perm] = Array.from(s)
-    })
   }
 
   async onFilesChanged (e) {

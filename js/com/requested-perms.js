@@ -25,12 +25,13 @@ class SidebarRequestedPerms extends LitElement {
   // =
 
   render () {
+    var perms = this.perms.filter(p => !p.perm.startsWith('app:'))
     return html`
       <link rel="stylesheet" href="/vendor/beaker-app-stdlib/css/fontawesome.css">
       <div class="field-group">
         <div class="field-group-title">Requested permissions</div>
-        ${this.perms.length
-          ? repeat(this.perms, perm => this.renderPerm(perm))
+        ${perms.length
+          ? repeat(perms, perm => this.renderPerm(perm))
           : html`<p>This site has requested no additional permissions.</p>`
         }
       </div>
@@ -38,7 +39,6 @@ class SidebarRequestedPerms extends LitElement {
   }
 
   renderPerm ({perm, value, opts}) {
-    if (perm.startsWith('app:')) return false // handled separately
     const permId = beakerPermissions.getPermId(perm)
     const permParam = beakerPermissions.getPermParam(perm)
     const desc = beakerPermissions.renderPermDesc({bg: null, html, url: this.url, permId, permParam, permOpts: opts})
