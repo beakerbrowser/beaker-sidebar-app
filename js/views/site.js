@@ -4,7 +4,7 @@ import * as toast from '/vendor/beaker-app-stdlib/js/com/toast.js'
 import { pluralize } from '/vendor/beaker-app-stdlib/js/strings.js'
 import { follows } from 'dat://unwalled.garden/index.js'
 import sidebarSiteViewCSS from '../../css/views/site.css.js'
-import '../com/app-perm-settings.js'
+import '../com/user-session.js'
 import '../com/requested-perms.js'
 import '../com/revisions.js'
 import '../com/local-folder.js'
@@ -17,7 +17,6 @@ class SidebarSiteView extends LitElement {
       url: {type: String},
       user: {type: Object},
       feedAuthors: {type: Array},
-      currentSection: {type: String},
       isLoading: {type: Boolean},
       readOnly: {type: Boolean},
       info: {type: Object},
@@ -131,11 +130,10 @@ class SidebarSiteView extends LitElement {
     }
   }
 
-  async load (section = 'about') {
+  async load () {
     this.isLoading = true
     if (!this.url) return
    
-    this.currentSection = section
     this.info = {}
     this.manifest = null
     this.followers = null
@@ -236,11 +234,6 @@ class SidebarSiteView extends LitElement {
       <link rel="stylesheet" href="/vendor/beaker-app-stdlib/css/fontawesome.css">
       ${this.renderSiteInfo()}
       <div class="inner">
-        <div class="nav">
-          ${this.renderNav('about', 'About')}
-          ${this.renderNav('perms', 'Permissions')}
-          ${!this.readOnly ? this.renderNav('dev', 'Development') : ''}
-        </div>
         ${this.renderAboutSection()}
         ${this.renderPermsSection()}
         ${this.renderDevSection()}
@@ -301,27 +294,16 @@ class SidebarSiteView extends LitElement {
         </div>
         <div class="right">
           <p><button class="transparent" disabled data-tooltip="todo"><span class="fas fa-fw fa-balance-scale"></span> License: None <span class="fas fa-caret-down"></span></button></p>
+          ${this.isDat ? html`
+            <p><span style="padding: 5px 10px; font-size: 11px"><span class="fas fa-fw fa-share-alt"></span> ${this.info.peers} ${pluralize(this.info.peers, 'peer')}</span></p>
+          ` : ''}
         </div>
       </div>
     `
   }
 
-  renderNav (id, label) {
-    const cls = id === this.currentSection ? 'current' : ''
-    return html`
-      <a class="${cls}" @click=${e => this.onClickSectionNav(e, id)}>${label}</a>
-    `
-  }
-
-  renderSection (id, content) {
-    if (this.currentSection !== id) {
-      return ''
-    }
-    return html`<div class="section">${content}</div>`
-  }
-
   renderAboutSection () {
-    return this.renderSection('about', html`
+    return html`
       ${this.renderPrimaryAction()}
       ${this.isDatDomainUnconfirmed ? html`
         <div class="field-group">
@@ -338,12 +320,6 @@ class SidebarSiteView extends LitElement {
           <p>
             This application is built into the Beaker browser.
           </p>
-        </div>
-      ` : ''}
-      ${this.isDat ? html`
-        <div class="field-group">
-          <div class="field-group-title">Dat network</div>
-          <p>${this.info.peers} ${pluralize(this.info.peers, 'peer')} connected.</p>
         </div>
       ` : ''}
       ${this.isHttps ? html`
@@ -382,20 +358,24 @@ class SidebarSiteView extends LitElement {
           </p>
         </div>
       ` : ''}
-    `)
+    `
   }
 
   renderPermsSection () {
-    return this.renderSection('perms', html`
+    return html`
+      <sidebar-user-session
+        origin=${this.origin}
+      ></sidebar-user-session>
       <sidebar-requested-perms
         origin=${this.origin}
         .perms=${this.requestedPerms}
       ></sidebar-requested-perms>
-    `)
+    `
   }
 
   renderDevSection () {
-    return this.renderSection('dev', html`
+    if (this.readOnly) return ''
+    return html`
       <div class="field-group">
         <div class="field-group-title">Preview mode</div>
         <p>
@@ -415,7 +395,7 @@ class SidebarSiteView extends LitElement {
         .info=${this.info}
         @request-load=${this.onRequestLoad}
       ></sidebar-local-folder>
-    `)
+    `
   }
 
   renderPrimaryAction () {
@@ -529,13 +509,8 @@ class SidebarSiteView extends LitElement {
   // events
   // =
 
-  onClickSectionNav (e, id) {
-    e.preventDefault()
-    this.currentSection = id
-  }
-
   onRequestLoad (e) {
-    this.load(this.currentSection)
+    this.load()
   }
 
   onClickLink (e, href, aux) {

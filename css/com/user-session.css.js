@@ -6,12 +6,12 @@ const cssStr = css`
 ${formCSS}
 ${buttonsCSS}
 
-.app-perms {
+.field-group {
   padding-top: 15px;
   padding-bottom: 15px;
 }
 
-.app-perms > div {
+.field-group > div {
   margin-bottom: 5px;
 }
 
@@ -19,6 +19,26 @@ ${buttonsCSS}
   display: inline-block;
   text-align: left;
   width: 90px;
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  background: #f5f5f5;
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.user img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 10px;
+}
+
+.user .title {
+  font-weight: bold;
 }
 `
 export default cssStr

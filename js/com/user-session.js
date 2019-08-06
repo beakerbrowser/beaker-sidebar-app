@@ -2,108 +2,102 @@ import { LitElement, html } from '/vendor/beaker-app-stdlib/vendor/lit-element/l
 import { repeat } from '/vendor/beaker-app-stdlib/vendor/lit-element/lit-html/directives/repeat.js'
 import * as dropdownMenu from './dropdown-menu.js'
 import { emit } from '/vendor/beaker-app-stdlib/js/dom.js'
-import sidebarAppPermSettingsCSS from '../../css/com/app-perm-settings.css.js'
+import userSessionCSS from '../../css/com/user-session.css.js'
 
-class SidebarAppPermSettings extends LitElement {
+class SidebarUserSession extends LitElement {
   static get properties () {
     return {
-      manifest: {type: Object},
-      readOnly: {type: Boolean}
+      origin: {type: String},
+      session: {type: Object}
     }
   }
 
   static get styles () {
-    return [sidebarAppPermSettingsCSS]
+    return userSessionCSS
   }
 
   constructor () {
     super()
-    this.manifest = {}
-    this.readOnly = false
+    this.origin = ''
+    this.session = null
   }
 
-  getSetPerms (perm) {
-    try {
-      return this.manifest.application.permissions[perm] || []
-    } catch (e) {
-      return []
-    }
-  }
-
-  isPermSet (perm, id) {
-    try {
-      return this.manifest.application.permissions[perm].includes(id)
-    } catch (e) {
-      return false
-    }
+  async connectedCallback () {
+    this.session = await navigator.session.get(this.origin)
+    super.connectedCallback()
   }
 
   // rendering
   // =
 
   render () {
+    if (!this.session) return html`<div></div>`
     return html`
       <link rel="stylesheet" href="/vendor/beaker-app-stdlib/css/fontawesome.css">
 
-      <div class="field-group app-perms">
-        <div class="field-group-title">Application permissions</div>
+      <div class="field-group">
+        <div class="field-group-title">User session</div>
+        <div class="user">
+          <img src="asset:thumb:${this.session.profile.url}">
+          <div class="details">
+            <div class="title">${this.session.profile.title}</div>
+            <div class="url"><a href="${this.session.profile.url}" @click=${this.onClickLink}>${this.session.profile.url}</a></div>
+          </div>
+          <div style="margin-left: auto" @click=${this.onClickLogout}>
+            <button>Logout</button>
+          </div>
+        </div>
         ${this.renderPermissionControl({
           icon: 'fas fa-rss',
           label: 'Follows API',
-          documentation: 'dat://unwalled.garden/docs/api/follows',
-          perm: 'unwalled.garden/perm/follows',
+          perm: 'unwalled.garden/api/follows',
           caps: [
-            {id: 'read', description: 'Query the user\'s followers'},
+            {id: 'read', description: 'Query the user\'s public followers'},
             {id: 'write', description: 'Follow and unfollow users'}
           ]
         })}
         ${this.renderPermissionControl({
           icon: 'far fa-comment-alt',
           label: 'Posts API',
-          documentation: 'dat://unwalled.garden/docs/api/posts',
-          perm: 'unwalled.garden/perm/posts',
+          perm: 'unwalled.garden/api/posts',
           caps: [
-            {id: 'read', description: 'Query the user\'s feed'},
+            {id: 'read', description: 'Query the user\'s public feed'},
             {id: 'write', description: 'Post to the user\'s feed'}
           ]
         })}
         ${this.renderPermissionControl({
           icon: 'far fa-star',
           label: 'Bookmarks API',
-          documentation: 'dat://unwalled.garden/docs/api/bookmarks',
-          perm: 'unwalled.garden/perm/bookmarks',
+          perm: 'unwalled.garden/api/bookmarks',
           caps: [
-            {id: 'read', description: 'Query the user\'s bookmarks'},
+            {id: 'read', description: 'Query the user\'s public bookmarks'},
             {id: 'write', description: 'Create and edit the user\'s bookmarks'}
           ]
         })}
         ${this.renderPermissionControl({
           icon: 'far fa-comments',
           label: 'Comments API',
-          documentation: 'dat://unwalled.garden/docs/api/comments',
-          perm: 'unwalled.garden/perm/comments',
+          perm: 'unwalled.garden/api/comments',
           caps: [
-            {id: 'read', description: 'Query the user\'s comments'},
+            {id: 'read', description: 'Query the user\'s public comments'},
             {id: 'write', description: 'Create and edit the user\'s comments'}
           ]
         })}
         ${this.renderPermissionControl({
           icon: 'far fa-smile',
           label: 'Reactions API',
-          documentation: 'dat://unwalled.garden/docs/api/reactions',
-          perm: 'unwalled.garden/perm/reactions',
+          perm: 'unwalled.garden/api/reactions',
           caps: [
-            {id: 'read', description: 'Query the user\'s reactions'},
-            {id: 'write', description: 'Create and edit the user\'s reactions'}
+            {id: 'read', description: 'Query the user\'s public emoji reactions'},
+            {id: 'write', description: 'Create and edit the user\'s emoji reactions'}
           ]
         })}
         ${this.renderPermissionControl({
           icon: 'fas fa-vote-yea',
           label: 'Votes API',
-          documentation: 'dat://unwalled.garden/docs/api/votes',
-          perm: 'unwalled.garden/perm/votes',
+          perm: 'unwalled.garden/api/votes',
           caps: [
-            {id: 'read', description: 'Query the user\'s votes'},
+            {id: 'read', description: 'Query the user\'s public votes'},
             {id: 'write', description: 'Create and edit the user\'s votes'}
           ]
         })}
@@ -112,7 +106,7 @@ class SidebarAppPermSettings extends LitElement {
   }
 
   renderPermissionControl (opts) {
-    var perms = this.getSetPerms(opts.perm)
+    var perms = this.session.permissions[opts.perm]
     var permsStr = (perms.length) ? perms.join(', ') : 'none'
     return html`
       <div>
@@ -169,20 +163,19 @@ class SidebarAppPermSettings extends LitElement {
             }
           </style>
           ${repeat(opts.caps, (({id, description}) => html`
-            <div class="toggleable-item ${this.readOnly ? 'disabled' : ''}">
+            <div class="toggleable-item disabled">
               <label>
                 <input
                   type="checkbox"
-                  ?disabled=${this.readOnly}
-                  ?checked=${this.isPermSet(opts.perm, id)}
-                  @change=${e => this.onChange(e, opts.perm, id)}
+                  disabled
+                  ?checked=${this.session.permissions[opts.perm].includes(id)}
                 >
                 ${description}
                 <small>${id}</small>
               </label>
             </div>
           `))}
-          <a class="api-docs-link" href="${opts.documentation}" @click=${this.onClickDocsLink}>
+          <a class="api-docs-link" href="dat://${opts.perm}" @click=${this.onClickLink}>
             <span class="fas fa-fw fa-external-link-alt"></span>
             ${opts.label} documentation
           </a>
@@ -191,18 +184,15 @@ class SidebarAppPermSettings extends LitElement {
     })
   }
 
-  onChange (e, perm, id) {
-    emit(this, 'toggle-app-perm', {
-      detail: {perm, id, enabled: e.currentTarget.checked},
-      bubbles: true,
-      composed: true
-    })
-  }
-
-  onClickDocsLink (e) {
+  onClickLink (e) {
     e.preventDefault()
     beaker.browser.openUrl(e.currentTarget.getAttribute('href'), {setActive: true})
   }
+
+  async onClickLogout (e) {
+    await navigator.session.destroy(this.origin)
+    this.session = null
+  }
 }
 
-customElements.define('sidebar-app-perm-settings', SidebarAppPermSettings)
+customElements.define('sidebar-user-session', SidebarUserSession)

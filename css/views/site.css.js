@@ -50,37 +50,8 @@ hr {
 }
 
 .inner {
-  display: flex;
-  flex: 1;
   overflow-y: auto;
-}
-
-.inner .nav {
-  flex: 0 0 110px;
-  background: #f7f7f7;
-  border-top: 1px solid #ccc;
-  border-right: 1px solid #ccc;
-}
-
-.inner .nav a {
-  display: block;
-  padding: 8px 8px;
-  cursor: pointer;
-  border-bottom: 1px solid #ccc;
-}
-
-.inner .nav a:hover {
-  background: #eee;
-}
-
-.inner .nav a.current {
-  background: #fff;
-  position: relative;
-}
-
-.section {
-  flex: 1;
-  padding: 5px 15px 15px;
+  padding: 5px 10px 15px;
 }
 
 .site-info {
