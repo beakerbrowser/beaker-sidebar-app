@@ -43,6 +43,10 @@ class SidebarEditorView extends LitElement {
     return 'latest'
   }
 
+  get isViewingPreview () {
+    return this.viewedDatVersion === 'preview'
+  }
+
   get pathname () {
     let urlp = new URL(this.url)
     return urlp.pathname
@@ -137,8 +141,8 @@ class SidebarEditorView extends LitElement {
         manifest = null
       }
       console.log(info)
-      this.readOnly = !info.isOwner
       this.previewMode = info.userSettings.previewMode
+      this.readOnly = !info.isOwner || (this.previewMode && !this.isViewingPreview)
 
       // readonly if viewing historic version
       if (info.isOwner) {
@@ -279,10 +283,15 @@ class SidebarEditorView extends LitElement {
         <link rel="stylesheet" href="/vendor/beaker-app-stdlib/css/fontawesome.css">
         <div class="toolbar">
           ${this.isDat ? this.renderToolbarFiles() : ''}
-          <div><span class="fas fa-fw fa-info-circle"></span> This page is read-only</div>
-          ${this.isDat ? html`<button class="transparent" @click=${this.onClickFork}><span class="far fa-fw fa-clone"></span> Make an editable copy</button>` : ''}
-          <div class="spacer"></div>
-          ${this.isDat ? html`<button class="transparent" @click=${this.onOpenInSiteEditor}><span class="far fa-fw fa-edit"></span> Open in Site Editor</button>` : ''}
+          ${this.previewMode && !this.isViewingPreview
+            ? html`
+              <div><span class="fas fa-fw fa-info-circle"></span> Viewing latest published version</div>
+              <button class="transparent" @click=${this.onClickGotoPreview}><span class="fas fa-fw fa-hammer"></span> Edit preview</button>
+            ` : html`
+              <div><span class="fas fa-fw fa-info-circle"></span> This page is read-only</div>
+              ${this.isDat ? html`<button class="transparent" @click=${this.onClickFork}><span class="far fa-fw fa-clone"></span> Make an editable copy</button>` : ''}
+            `}
+          <div class="divider"></div>
         </div>
         ${this.isFilesOpen ? this.renderFilesSidebar() : ''}
         ${this.isBinary ? html`
@@ -303,23 +312,47 @@ class SidebarEditorView extends LitElement {
             This page ${this.previewChange === 'del' ? 'has been deleted' : 'does not exist'}.
           </div>
         ` : html`
-          <button class="transparent" title="Save" @click=${this.onClickSave}><span class="fas fa-fw fa-save"></span> <span class="btn-label">Save</span></button>
-          <button class="transparent" title="Rename" @click=${this.onClickRename}><span class="fas fa-fw fa-i-cursor"></span> <span class="btn-label">Rename</span></button>
-          <button class="transparent" title="Delete" @click=${this.onClickDelete}><span class="fas fa-fw fa-trash"></span> <span class="btn-label">Delete</span></button>
+          <button class="transparent tooltip-nodelay tooltip-onsmall" title="Save" @click=${this.onClickSave} data-tooltip="Save">
+            <span class="fas fa-fw fa-save"></span> <span class="btn-label">Save</span>
+          </button>
+          <button class="transparent tooltip-nodelay tooltip-onsmall" title="Rename" @click=${this.onClickRename} data-tooltip="Rename">
+            <span class="fas fa-fw fa-i-cursor"></span> <span class="btn-label">Rename</span>
+          </button>
+          <button class="transparent tooltip-nodelay tooltip-onsmall" title="Delete" @click=${this.onClickDelete} data-tooltip="Delete">
+            <span class="fas fa-fw fa-trash"></span> <span class="btn-label">Delete</span>
+          </button>
         `}
+        <span class="divider"></span>
         ${this.previewMode ? html`
-          <span class="divider"></span>
           ${this.previewChange ? html`
             <span class="revision-indicator ${this.previewChange}"></span>
           ` : ''}
-          <button class="transparent" ?disabled=${!this.previewChange} @click=${this.onClickPublish}>
-            <span class="fas fa-fw fa-check"></span> ${this.previewChange === 'del' ? 'Confirm delete' : 'Publish'}
+          <button
+            class="transparent tooltip-nodelay tooltip-onsmall"
+            ?disabled=${!this.previewChange}
+            @click=${this.onClickPublish}
+            data-tooltip=${this.previewChange === 'del' ? 'Confirm delete' : 'Publish'}
+          >
+            <span class="fas fa-fw fa-check"></span>
+            <span class="btn-label">${this.previewChange === 'del' ? 'Confirm delete' : 'Publish'}</span>
           </button>
-          <button class="transparent ${this.isDiffing ? 'pressed' : ''}" ?disabled=${!this.previewChange || this.isBinary} @click=${this.onClickToggleDiff}>
-            <span class="fas fa-fw fa-columns"></span> Diff
+          <button
+            class="transparent tooltip-nodelay tooltip-onsmall ${this.isDiffing ? 'pressed' : ''}"
+            ?disabled=${!this.previewChange || this.isBinary}
+            @click=${this.onClickToggleDiff}
+            data-tooltip="Diff"
+          >
+            <span class="fas fa-fw fa-columns"></span>
+            <span class="btn-label">Diff</span>
           </button>
-          <button class="transparent" ?disabled=${!this.previewChange} @click=${this.onClickRevert}>
-            <span class="fas fa-fw fa-undo"></span> Revert
+          <button
+            class="transparent tooltip-nodelay tooltip-onsmall"
+            ?disabled=${!this.previewChange}
+            @click=${this.onClickRevert}
+            data-tooltip="Revert"
+          >
+            <span class="fas fa-fw fa-undo"></span>
+            <span class="btn-label">Revert</span>
           </button>
           <span class="divider"></span>
         ` : ''}
@@ -460,6 +493,13 @@ class SidebarEditorView extends LitElement {
     this.load()
   }
 
+  async onClickGotoPreview () {
+    var urlp = new URL(this.url)
+    var parts = urlp.hostname.split('+')
+    urlp.hostname = `${parts[0]}+preview`
+    beaker.browser.gotoUrl(urlp.toString())
+  }
+
   async onClickFork () {
     var archive = await DatArchive.fork(this.url)
     beaker.browser.openUrl(`${archive.url}${this.pathname}`, {
@@ -471,10 +511,6 @@ class SidebarEditorView extends LitElement {
 
   onToggleLiveReloading () {
     beaker.browser.toggleLiveReloading()
-  }
-
-  onOpenInSiteEditor () {
-    beaker.browser.openUrl(`beaker://editor/${this.origin}${this.resolvedPath}`, {setActive: true})
   }
 }
 

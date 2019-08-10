@@ -30,8 +30,14 @@ const cssStr = css`
   flex: 1;
 }
 
-@media (max-width: 540px) {
+@media (max-width: 600px) {
   .toolbar .btn-label {
+    display: none;
+  }
+}
+@media (min-width: 601px) {
+  .tooltip-onsmall[data-tooltip]:hover:after,
+  .tooltip-onsmall[data-tooltip]:hover:before {
     display: none;
   }
 }

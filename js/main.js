@@ -1,6 +1,7 @@
 import { LitElement, html } from '/vendor/beaker-app-stdlib/vendor/lit-element/lit-element.js'
 import { classMap } from '/vendor/beaker-app-stdlib/vendor/lit-element/lit-html/directives/class-map.js'
 import * as toast from '/vendor/beaker-app-stdlib/js/com/toast.js'
+import * as contextMenu from '/vendor/beaker-app-stdlib/js/com/context-menu.js'
 import sidebarAppCSS from '../css/main.css.js'
 import '/vendor/beaker-app-stdlib/js/com/comments/thread.js'
 import './views/site.js'
@@ -32,6 +33,8 @@ class SidebarApp extends LitElement {
     this.followedUsers = []
     this.comments = []
     this.commentCount = 0
+    this.previewMode = false
+    this.isViewingPreview = false
 
     document.body.addEventListener('contextmenu', e => {
       e.preventDefault()
@@ -68,6 +71,14 @@ class SidebarApp extends LitElement {
     this.commentCount = countComments(cs)
     await loadCommentReactions(this.feedAuthors, cs)
     this.comments = cs
+
+    this.previewMode = false
+    this.isViewingPreview = false
+    if (this.currentUrl.startsWith('dat://')) {
+      let info = await (new DatArchive(this.currentUrl)).getInfo()
+      this.previewMode = info.userSettings.previewMode
+      this.isViewingPreview = (new URL(this.currentUrl)).hostname.includes('+preview')
+    }
     
     this.isLoading = false
     this.requestUpdate()
@@ -97,10 +108,22 @@ class SidebarApp extends LitElement {
         ${navItem('site', html`<span class="fas fa-fw fa-info"></span> Site`)}
         ${navItem('editor', html`<span class="far fa-fw fa-edit"></span> Editor`)}
         ${navItem('comments', html`<span class="far fa-fw fa-comment-alt"></span> Comments (${this.commentCount})`)}
-        <a href="#" @click=${this.onClickClose} style="margin-left: auto"><span class="fas fa-fw fa-times"></span></a>
+        <span style="flex: 1"></span>
+        ${this.renderPreviewModeSelector()}
+        <a href="#" @click=${this.onClickClose}><span class="fas fa-fw fa-times"></span></a>
       </div>
       ${this.renderView()}
     `
+  }
+
+  renderPreviewModeSelector () {
+    if (this.previewMode) {
+      return html`
+        <a href="#" @click=${this.onClickPreviewModeSelector}>
+          Viewing: ${this.isViewingPreview ? 'Preview' : 'Latest'} <span class="fas fa-caret-down"></span>
+        </a>
+      `
+    }
   }
 
   renderView () {
@@ -154,6 +177,40 @@ class SidebarApp extends LitElement {
     e.preventDefault()
     e.stopPropagation()
     this.setView(id)
+  }
+
+  onClickPreviewModeSelector (e) {
+    e.preventDefault()
+    e.stopPropagation()
+
+    const set = (v) => {
+      var urlp = new URL(this.currentUrl)
+      var parts = urlp.hostname.split('+')
+      urlp.hostname = `${parts[0]}${v}`
+      beaker.browser.gotoUrl(urlp.toString())
+    }
+
+    var rects = e.currentTarget.getClientRects()[0]
+    contextMenu.create({
+      x: rects.right,
+      y: rects.bottom + 5,
+      right: true,
+      roomy: true,
+      withTriangle: true,
+      fontAwesomeCSSUrl: '/vendor/beaker-app-stdlib/css/fontawesome.css',
+      items: [
+        {
+          icon: 'fas fa-fw fa-globe-americas',
+          label: 'Go to Latest',
+          click: () => set('')
+        },
+        {
+          icon: 'fas fa-fw fa-laptop',
+          label: 'Go to Preview',
+          click: () => set('+preview')
+        }
+      ]
+    })
   }
 
   onClickClose () {
