@@ -1,11 +1,16 @@
 import { LitElement, html } from '/vendor/beaker-app-stdlib/vendor/lit-element/lit-element.js'
 import { classMap } from '/vendor/beaker-app-stdlib/vendor/lit-element/lit-html/directives/class-map.js'
-import { profiles, follows, posts, comments, reactions } from 'dat://unwalled.garden/index.js'
 import * as toast from '/vendor/beaker-app-stdlib/js/com/toast.js'
 import sidebarAppCSS from '../css/main.css.js'
 import '/vendor/beaker-app-stdlib/js/com/comments/thread.js'
 import './views/site.js'
 import './views/editor.js'
+
+const profiles = navigator.importSystemAPI('unwalled-garden-profiles')
+const follows = navigator.importSystemAPI('unwalled-garden-follows')
+const posts = navigator.importSystemAPI('unwalled-garden-posts')
+const comments = navigator.importSystemAPI('unwalled-garden-comments')
+const reactions = navigator.importSystemAPI('unwalled-garden-reactions')
 
 class SidebarApp extends LitElement {
   static get properties () {

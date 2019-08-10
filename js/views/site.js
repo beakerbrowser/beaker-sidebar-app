@@ -2,12 +2,13 @@ import { LitElement, html } from '/vendor/beaker-app-stdlib/vendor/lit-element/l
 import { repeat } from '/vendor/beaker-app-stdlib/vendor/lit-element/lit-html/directives/repeat.js'
 import * as toast from '/vendor/beaker-app-stdlib/js/com/toast.js'
 import { pluralize } from '/vendor/beaker-app-stdlib/js/strings.js'
-import { follows } from 'dat://unwalled.garden/index.js'
 import sidebarSiteViewCSS from '../../css/views/site.css.js'
 import '../com/user-session.js'
 import '../com/requested-perms.js'
 import '../com/revisions.js'
 import '../com/local-folder.js'
+
+const follows = navigator.importSystemAPI('unwalled-garden-follows')
 
 const isDatHashRegex = /^[a-z0-9]{64}/i
 
