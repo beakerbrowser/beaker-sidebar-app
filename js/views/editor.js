@@ -195,8 +195,6 @@ class SidebarEditorView extends LitElement {
       let urlp2 = new URL(url)
       urlp2.pathname = this.resolvedPath || this.pathname
       let model = monaco.editor.createModel(body, null, url ? monaco.Uri.parse(urlp2.toString()) : undefined)
-      model.updateOptions({readOnly: this.readOnly, tabSize: 2})
-      editor.setModel(model)
 
       // override the model syntax highlighting when the URL doesnt give enough info (no extension)
       if (body && model.getModeId() === 'plaintext') {
@@ -213,6 +211,14 @@ class SidebarEditorView extends LitElement {
           }
         }
       }
+
+      editor.updateOptions({
+        // only enable autocomplete for html/css/js
+        quickSuggestions: ['html', 'css', 'javascript'].includes(model.getModeId()),
+        wordBasedSuggestions: false
+      })
+      model.updateOptions({readOnly: this.readOnly,tabSize: 2})
+      editor.setModel(model)
     }
 
     this.isLoading = false
