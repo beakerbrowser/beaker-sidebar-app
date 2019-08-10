@@ -215,7 +215,8 @@ class SidebarEditorView extends LitElement {
       editor.updateOptions({
         // only enable autocomplete for html/css/js
         quickSuggestions: ['html', 'css', 'javascript'].includes(model.getModeId()),
-        wordBasedSuggestions: false
+        wordBasedSuggestions: false,
+        wordWrap: 'on'
       })
       model.updateOptions({readOnly: this.readOnly,tabSize: 2})
       editor.setModel(model)
