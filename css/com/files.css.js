@@ -10,8 +10,9 @@ ${toolbarCSS}
   display: block;
 }
 
-.listing {
-  height: calc(100vh - 63px);
+:host([fullheight]) .listing {
+  height: calc(100vh - 126px);
+  overflow-y: auto;
 }
 
 .listing .item {

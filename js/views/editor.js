@@ -397,6 +397,7 @@ class SidebarEditorView extends LitElement {
   renderFilesSidebar () {
     return html`
       <sidebar-files
+        fullheight
         url=${this.url}
       ></sidebar-files>
     `

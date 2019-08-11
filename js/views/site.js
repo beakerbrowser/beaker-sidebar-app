@@ -7,6 +7,7 @@ import '../com/user-session.js'
 import '../com/requested-perms.js'
 import '../com/revisions.js'
 import '../com/local-folder.js'
+import '../com/files.js'
 
 const follows = navigator.importSystemAPI('unwalled-garden-follows')
 
@@ -291,26 +292,34 @@ class SidebarSiteView extends LitElement {
             .perms=${this.requestedPerms}
           ></sidebar-requested-perms>
 
-          <div class="field-group">
-            <div class="field-group-title">Preview mode</div>
-            <p>
-              <button @click=${this.onTogglePreviewMode}>
-                <span class="fas fa-fw fa-hammer"></span>
-                Preview Mode: <strong>${this.isPreviewModeEnabled ? 'On' : 'Off'}</strong>
-              </button>
-            </p>
-            <p class="help">
-              <span class="fas fa-fw fa-info"></span>
-              Preview mode lets you see changes in a private version of the site.
-              You can review the changes before publishing.
-            </p>
-          </div>
-          <sidebar-local-folder
-            origin=${this.origin}
-            .info=${this.info}
-            @request-load=${this.onRequestLoad}
-          ></sidebar-local-folder>
+          ${!this.readOnly ? html`
+            <div class="field-group">
+              <div class="field-group-title">Preview mode</div>
+              <p>
+                <button @click=${this.onTogglePreviewMode}>
+                  <span class="fas fa-fw fa-hammer"></span>
+                  Preview Mode: <strong>${this.isPreviewModeEnabled ? 'On' : 'Off'}</strong>
+                </button>
+              </p>
+              <p class="help">
+                <span class="fas fa-fw fa-info"></span>
+                Preview mode lets you see changes in a private version of the site.
+                You can review the changes before publishing.
+              </p>
+            </div>
+            <sidebar-local-folder
+              origin=${this.origin}
+              .info=${this.info}
+              @request-load=${this.onRequestLoad}
+            ></sidebar-local-folder>
+          ` : ''}
         </div>
+
+        ${this.isDat ? html`
+          <sidebar-files
+            url=${this.url}
+          ></sidebar-files>
+        ` : ''}
       </div>
     `
   }

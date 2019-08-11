@@ -128,6 +128,13 @@ hr {
   object-fit: cover;
 }
 
+sidebar-files {
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding-bottom: 2px;
+  overflow: hidden;
+}
+
 .columns-layout {
   column-count: 2;
   column-gap: 10px;
