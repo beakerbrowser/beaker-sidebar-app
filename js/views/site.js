@@ -83,7 +83,7 @@ class SidebarSiteView extends LitElement {
 
   get isDatDomainUnconfirmed () {
     // viewing a dat at a hostname but no domain is confirmed
-    var hostname = this.hostname
+    var hostname = this.hostname.replace(/\+.*$/i, '')
     return this.isDat && !isDatHashRegex.test(hostname) && this.info.domain !== hostname
   }
 
