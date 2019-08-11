@@ -246,14 +246,6 @@ class SidebarSiteView extends LitElement {
             </p>
           </div>
         ` : ''}
-        ${this.isBeaker ? html`
-          <div class="field-group">
-            <div class="field-group-title">Beaker application</div>
-            <p>
-              This application is built into the Beaker browser.
-            </p>
-          </div>
-        ` : ''}
         ${this.isHttps ? html`
           <div class="field-group">
             <div class="field-group-title">HTTPS</div>

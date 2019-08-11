@@ -105,7 +105,7 @@ class SidebarApp extends LitElement {
     return html`
       <link rel="stylesheet" href="/vendor/beaker-app-stdlib/css/fontawesome.css">
       <div class="nav">
-        ${navItem('site', html`<span class="fas fa-fw fa-info"></span> Site`)}
+        ${navItem('site', html`<span class="fas fa-fw fa-info"></span> About`)}
         ${navItem('editor', html`<span class="far fa-fw fa-edit"></span> Editor`)}
         ${navItem('comments', html`<span class="far fa-fw fa-comment-alt"></span> Comments (${this.commentCount})`)}
         <span style="flex: 1"></span>

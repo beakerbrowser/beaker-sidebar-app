@@ -138,6 +138,7 @@ sidebar-files {
 .columns-layout {
   column-count: 2;
   column-gap: 10px;
+  margin-bottom: 10px;
 }
 
 .columns-layout > * {
