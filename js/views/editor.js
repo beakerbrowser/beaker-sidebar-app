@@ -506,7 +506,7 @@ class SidebarEditorView extends LitElement {
     beaker.browser.openUrl(`${archive.url}${this.pathname}`, {
       setActive: true,
       isSidebarActive: true,
-      sidebarApp: 'editor'
+      sidebarPanel: 'editor'
     })
   }
 

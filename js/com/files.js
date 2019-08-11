@@ -193,7 +193,7 @@ class SidebarFiles extends LitElement {
             beaker.browser.openUrl(url, {
               setActive: true,
               isSidebarActive: true,
-              sidebarApp: 'files'
+              sidebarPanel: 'files'
             })
           }
         },
