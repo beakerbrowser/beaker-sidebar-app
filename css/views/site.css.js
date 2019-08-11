@@ -128,9 +128,24 @@ hr {
   object-fit: cover;
 }
 
+.columns-layout {
+  column-count: 2;
+  column-gap: 10px;
+}
+
+.columns-layout > * {
+  display: block;
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
 @media (max-width: 600px) {
   .btn-label {
     display: none;
+  }
+
+  .columns-layout {
+    column-count: 1;
   }
 }
 `

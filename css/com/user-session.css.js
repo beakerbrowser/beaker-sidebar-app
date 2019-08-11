@@ -7,7 +7,6 @@ ${formCSS}
 ${buttonsCSS}
 
 .field-group {
-  padding-top: 15px;
   padding-bottom: 15px;
 }
 

@@ -48,16 +48,12 @@ const cssStr = css`
   border: 1px solid #ccc;
   border-radius: 3px;
   padding: 10px;
-  margin-bottom: 26px;
+  margin-bottom: 10px;
 }
 
 .field-group-title {
-  display: inline-block;
-  position: absolute;
-  top: -8px;
-  left: 10px;
-  padding: 0 4px;
-  background: #fff;
+  position: relative;
+  top: -4px;
   font-size: 11px;
   font-weight: 600;
 }

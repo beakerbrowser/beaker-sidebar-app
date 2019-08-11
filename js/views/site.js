@@ -235,9 +235,82 @@ class SidebarSiteView extends LitElement {
       <link rel="stylesheet" href="/vendor/beaker-app-stdlib/css/fontawesome.css">
       ${this.renderSiteInfo()}
       <div class="inner">
-        ${this.renderAboutSection()}
-        ${this.renderPermsSection()}
-        ${this.renderDevSection()}
+        ${this.renderPrimaryAction()}
+        ${this.isDatDomainUnconfirmed ? html`
+          <div class="field-group">
+            <div class="field-group-title"><span class="fas fa-fw fa-exclamation-triangle"></span> Domain issue</div>
+            <p>
+              This site has not confirmed <code>${this.hostname}</code> as its primary domain.
+              It's safe to view but you will not be able to follow it or use its advanced features.
+            </p>
+          </div>
+        ` : ''}
+        ${this.isBeaker ? html`
+          <div class="field-group">
+            <div class="field-group-title">Beaker application</div>
+            <p>
+              This application is built into the Beaker browser.
+            </p>
+          </div>
+        ` : ''}
+        ${this.isHttps ? html`
+          <div class="field-group">
+            <div class="field-group-title">HTTPS</div>
+            <p>
+              This website is served over a secure connection.
+            </p>
+          </div>
+        ` : ''}
+        ${this.isHttp ? html`
+          <div class="field-group">
+            <div class="field-group-title">HTTP</div>
+            <p class="warning"><span class="fas fa-exclamation-triangle"></span> Your connection to this site is not secure.</p>
+            <p>
+              You should not enter any sensitive information on this site (for example, passwords or credit cards) because it could be stolen by attackers.
+            </p>
+          </div>
+        ` : ''}
+
+        <div class="columns-layout">
+          ${!this.readOnly && this.currentDiff && this.currentDiff.length ? html`
+            <sidebar-revisions
+              origin=${this.origin}
+              .currentDiff=${this.currentDiff}
+              @publish=${this.onPublishAll}
+              @revert=${this.onRevertAll}
+            ></sidebar-revisions>
+          ` : ''}
+          ${this.renderFollowers()}
+          ${this.renderFollows()}
+
+          <sidebar-user-session
+            origin=${this.origin}
+          ></sidebar-user-session>
+          <sidebar-requested-perms
+            origin=${this.origin}
+            .perms=${this.requestedPerms}
+          ></sidebar-requested-perms>
+
+          <div class="field-group">
+            <div class="field-group-title">Preview mode</div>
+            <p>
+              <button @click=${this.onTogglePreviewMode}>
+                <span class="fas fa-fw fa-hammer"></span>
+                Preview Mode: <strong>${this.isPreviewModeEnabled ? 'On' : 'Off'}</strong>
+              </button>
+            </p>
+            <p class="help">
+              <span class="fas fa-fw fa-info"></span>
+              Preview mode lets you see changes in a private version of the site.
+              You can review the changes before publishing.
+            </p>
+          </div>
+          <sidebar-local-folder
+            origin=${this.origin}
+            .info=${this.info}
+            @request-load=${this.onRequestLoad}
+          ></sidebar-local-folder>
+        </div>
       </div>
     `
   }
@@ -303,104 +376,8 @@ class SidebarSiteView extends LitElement {
     `
   }
 
-  renderAboutSection () {
-    return html`
-      ${this.renderPrimaryAction()}
-      ${this.isDatDomainUnconfirmed ? html`
-        <div class="field-group">
-          <div class="field-group-title"><span class="fas fa-fw fa-exclamation-triangle"></span> Domain issue</div>
-          <p>
-            This site has not confirmed <code>${this.hostname}</code> as its primary domain.
-            It's safe to view but you will not be able to follow it or use its advanced features.
-          </p>
-        </div>
-      ` : ''}
-      ${this.isBeaker ? html`
-        <div class="field-group">
-          <div class="field-group-title">Beaker application</div>
-          <p>
-            This application is built into the Beaker browser.
-          </p>
-        </div>
-      ` : ''}
-      ${this.isHttps ? html`
-        <div class="field-group">
-          <div class="field-group-title">HTTPS</div>
-          <p>
-            This website is served over a secure connection.
-          </p>
-        </div>
-      ` : ''}
-      ${this.isHttp ? html`
-        <div class="field-group">
-          <div class="field-group-title">HTTP</div>
-          <p class="warning"><span class="fas fa-exclamation-triangle"></span> Your connection to this site is not secure.</p>
-          <p>
-            You should not enter any sensitive information on this site (for example, passwords or credit cards) because it could be stolen by attackers.
-          </p>
-        </div>
-      ` : ''}
-      ${!this.readOnly && this.currentDiff && this.currentDiff.length ? html`
-        <sidebar-revisions
-          origin=${this.origin}
-          .currentDiff=${this.currentDiff}
-          @publish=${this.onPublishAll}
-          @revert=${this.onRevertAll}
-        ></sidebar-revisions>
-      ` : ''}
-      ${this.renderFollowers()}
-      ${this.renderFollows()}
-      ${!this.readOnly ? html`
-        <div class="field-group">
-          <div class="field-group-title">Admin</div>
-          <p>
-            <button class="transparent" disabled data-tooltip="todo"><span class="fas fa-fw fa-globe"></span> Set domain name</button>
-            <button class="transparent" disabled data-tooltip="todo"><span class="fas fa-fw fa-drafting-compass"></span> Theme: None <span class="fas fa-caret-down"></span></button>
-          </p>
-        </div>
-      ` : ''}
-    `
-  }
-
-  renderPermsSection () {
-    return html`
-      <sidebar-user-session
-        origin=${this.origin}
-      ></sidebar-user-session>
-      <sidebar-requested-perms
-        origin=${this.origin}
-        .perms=${this.requestedPerms}
-      ></sidebar-requested-perms>
-    `
-  }
-
-  renderDevSection () {
-    if (this.readOnly) return ''
-    return html`
-      <div class="field-group">
-        <div class="field-group-title">Preview mode</div>
-        <p>
-          <button @click=${this.onTogglePreviewMode}>
-            <span class="fas fa-fw fa-hammer"></span>
-            Preview Mode: <strong>${this.isPreviewModeEnabled ? 'On' : 'Off'}</strong>
-          </button>
-        </p>
-        <p class="help">
-          <span class="fas fa-fw fa-info"></span>
-          Preview mode lets you see changes in a private version of the site.
-          You can review the changes before publishing.
-        </p>
-      </div>
-      <sidebar-local-folder
-        origin=${this.origin}
-        .info=${this.info}
-        @request-load=${this.onRequestLoad}
-      ></sidebar-local-folder>
-    `
-  }
-
   renderPrimaryAction () {
-    if (!this.isDat || this.isLocalUser) {
+    if (!this.isDat) {
       return '' // no primary actions
     }
 
@@ -424,38 +401,49 @@ class SidebarSiteView extends LitElement {
       }
     }
 
-    var publishBtn = ''
+    var adminCtrls = ''
     if (!this.readOnly) {
-      publishBtn = html`
+      adminCtrls = html`
+        ${!this.isLocalUser ? html`
+          <button class="transparent" disabled data-tooltip="todo">
+            <span class="fas fa-fw fa-bullhorn"></span>
+            Publish on my profile
+          </button>
+        ` : ''}
         <button class="transparent" disabled data-tooltip="todo">
-          <span class="fas fa-fw fa-bullhorn"></span>
-          <span class="btn-label">Publish on my profile</span>
+          <span class="fas fa-fw fa-globe"></span>
+          Set domain name
+        </button>
+        <button class="transparent" disabled data-tooltip="todo">
+          <span class="fas fa-fw fa-drafting-compass"></span>
+          Theme: None
+          <span class="fas fa-caret-down"></span>
         </button>
       `
     }
 
     var saveBtn = ''
-    if (this.isSaved) {
-      saveBtn = html`
-        <button class="transparent" @click=${this.onClickUnsave}>
-          <span class="fas fa-fw fa-trash"></span>
-          <span class="btn-label">
+    if (!this.isLocalUser) {
+      if (this.isSaved) {
+        saveBtn = html`
+          <button class="transparent" @click=${this.onClickUnsave}>
+            <span class="fas fa-fw fa-trash"></span>
             ${this.readOnly ? 'Remove from my websites' : 'Move to trash'}
-          </span>
-        </button>
-      `
-    } else {
-      saveBtn = html`
-        <button class="transparent" @click=${this.onClickSave}>
-          <span class="far fa-fw fa-save"></span>
-          <span class="btn-label">Save to my websites</span>
-        </button>
-      `
+          </button>
+        `
+      } else {
+        saveBtn = html`
+          <button class="transparent" @click=${this.onClickSave}>
+            <span class="far fa-fw fa-save"></span>
+            Save to my websites
+          </button>
+        `
+      }
     }
     return html`
       <div class="primary-action">
         ${typeBtn}
-        ${publishBtn}
+        ${adminCtrls}
         ${saveBtn}
       </div>
     `
