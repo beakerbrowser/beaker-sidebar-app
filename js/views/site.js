@@ -362,12 +362,26 @@ class SidebarSiteView extends LitElement {
             <span class="fas fa-fw fa-pencil-alt"></span> Created by:
             <a href="#">Beaker Browser Inc</a>
           </p>` : ''*/}
-          ${(this.isDat || this.isHttps) && this.info.domain ? html`
-            <p><span class="fas fa-fw fa-check" style="color: green"></span> ${this.info.domain}</p>
-          ` : ''}
+          ${(this.isDat || this.isHttps)
+            ? this.readOnly
+              ? html`
+                <p><span class="fas fa-fw fa-globe"></span> ${this.info.domain || this.hostname}</p>
+              `
+              : html`
+                <p>
+                  <span
+                    class="editable tooltip-nodelay"
+                    data-tooltip="Change domain name (TODO)"
+                    @click=${undefined}
+                  >
+                    <span class="fas fa-fw fa-globe"></span> ${this.info.domain || this.hostname}
+                  </span>
+                </p>
+                `
+            : ''
+          }
         </div>
         <div class="right">
-          <p><button class="transparent" disabled data-tooltip="todo"><span class="fas fa-fw fa-balance-scale"></span> License: None <span class="fas fa-caret-down"></span></button></p>
           ${this.isDat ? html`
             <p><span style="padding: 5px 10px; font-size: 11px"><span class="fas fa-fw fa-share-alt"></span> ${this.info.peers} ${pluralize(this.info.peers, 'peer')}</span></p>
           ` : ''}
@@ -411,10 +425,6 @@ class SidebarSiteView extends LitElement {
           </button>
         ` : ''}
         <button class="transparent" disabled data-tooltip="todo">
-          <span class="fas fa-fw fa-globe"></span>
-          Set domain name
-        </button>
-        <button class="transparent" disabled data-tooltip="todo">
           <span class="fas fa-fw fa-drafting-compass"></span>
           Theme: None
           <span class="fas fa-caret-down"></span>
@@ -444,6 +454,7 @@ class SidebarSiteView extends LitElement {
       <div class="primary-action">
         ${typeBtn}
         ${adminCtrls}
+        <button class="transparent" disabled data-tooltip="todo"><span class="fas fa-fw fa-balance-scale"></span> License: None <span class="fas fa-caret-down"></span></button>
         ${saveBtn}
       </div>
     `
