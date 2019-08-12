@@ -38,7 +38,7 @@ class SidebarApp extends LitElement {
     this.isViewingPreview = false
 
     document.body.addEventListener('contextmenu', e => {
-      // e.preventDefault() RESTOREME
+      e.preventDefault()
     })
 
     // export an API which is called by the browser

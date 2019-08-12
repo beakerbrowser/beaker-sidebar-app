@@ -2,18 +2,32 @@
 // =
 
 const METHOD_HELP = [
-  {name: 'ls', description: 'List files in the directory'},
+  {name: 'ls', description: 'List files in the directory or information about a file'},
   {name: 'cd', description: 'Change the current directory'},
   {name: 'pwd', description: 'Fetch the current directory'},
   {name: 'mkdir', description: 'Make a new directory'},
-  {name: 'rmdir', description: 'Remove an existing directory'},
   {name: 'mv', description: 'Move a file or folder'},
   {name: 'cp', description: 'Copy a file or folder'},
-  {name: 'rm', description: 'Remove a file'},
-  {name: 'echo', description: 'Output the arguments'},
+  {name: 'rm', description: 'Remove a file or folder'},
+  {name: 'read', description: 'Output the contents of a file'},
+  {name: 'write', description: 'Write to a file'},
   {name: 'open', description: 'Open the target in the browser'},
-  {name: 'edit', description: 'Edit the target in the browser'}
+  {name: 'edit', description: 'Edit the target in the browser'},
 ]
+
+const METHOD_DETAILED_HELP = {
+  ls: html => html`<strong>ls</strong> <span style="color: gray">[-a|--all]</span> {target}`,
+  cd: html => html`<strong>cd</strong> {target}`,
+  pwd: html => html`<strong>pwd</strong>`,
+  mkdir: html => html`<strong>mkdir</strong> {target}`,
+  mv: html => html`<strong>mv</strong> {src} {dst}`,
+  cp: html => html`<strong>cp</strong> {src} {dst}`,
+  rm: html => html`<strong>rm</strong> {target}`,
+  read: html => html`<strong>read</strong> {target}`,
+  write: html => html`<strong>write</strong> -t|--to {target} {content...}`,
+  open: html => html`<strong>open</strong> <span style="color: gray">[-n]</span> {target}`,
+  edit: html => html`<strong>edit</strong> <span style="color: gray">[-n]</span> {target}`,
+}
 
 export function help (env) {
   return {
@@ -32,157 +46,246 @@ export function help (env) {
 // =
 
 export async function ls (env, opts = {}, location = '') {
+  if (opts.h || opts.help) {
+    return detailedHelp(env, 'ls')
+  }
+
   // pick target location
-  const cwd = env.getCWD()
-  location = toCWDLocation(env, location)
-  // TODO add support for other domains than CWD
+  location = resolve(env, location, true)
+  var {archive, pathname} = parseLocation(location)
 
   // read
-  var listing = await cwd.archive.readdir(location, {stat: true})
+  var listing
+  var st = await archive.stat(pathname)
+  if (st.isFile()) {
+    listing = st
+    listing.toHTML = () => env.html`Is a file.
+Size: ${listing.size}`
+  } else {
+    listing = await archive.readdir(pathname, {stat: true})
+    listing.toHTML = () => listing
+      .filter(entry => {
+        if (opts.all || opts.a) return true
+        return entry.name.startsWith('.') === false
+      })
+      .sort((a, b) => {
+        // dirs on top
+        if (a.stat.isDirectory() && !b.stat.isDirectory()) return -1
+        if (!a.stat.isDirectory() && b.stat.isDirectory()) return 1
+        return a.name.localeCompare(b.name)
+      })
+      .map(entry => {
+        // coloring
+        var color = 'inherit'
+        if (entry.name.startsWith('.')) {
+          color = 'gray'
+        }
 
-  // render
-  listing.toHTML = () => listing
-    .filter(entry => {
-      if (opts.all || opts.a) return true
-      return entry.name.startsWith('.') === false
-    })
-    .sort((a, b) => {
-      // dirs on top
-      if (a.stat.isDirectory() && !b.stat.isDirectory()) return -1
-      if (!a.stat.isDirectory() && b.stat.isDirectory()) return 1
-      return a.name.localeCompare(b.name)
-    })
-    .map(entry => {
-      // coloring
-      var color = 'inherit'
-      if (entry.name.startsWith('.')) {
-        color = 'gray'
-      }
+        function onclick (e) {
+          e.preventDefault()
+          e.stopPropagation()
+          env.evalCommand(`ls ${joinPath(location, entry.name)}`)
+        }
 
-      function onclick (e) {
-        e.preventDefault()
-        e.stopPropagation()
-        env.evalCommand(`cd ${entry.name}`)
-      }
-
-      // render
-      const entryUrl = cwd.archive.url + joinPath(location, entry.name)
-      const weight = entry.stat.isDirectory() ? 'bold' : 'normal'
-      return env.html`<div style="color: ${color}"><span style="font-weight: ${weight}"><a
-          href=${entryUrl}
-          @click=${entry.stat.isDirectory() ? onclick : undefined}
-          target="_blank"
-        >${entry.name}</a></span></div>`
-    })
+        // render
+        const weight = entry.stat.isDirectory() ? 'bold' : 'normal'
+        return env.html`<div><a
+          @click=${onclick}
+          style="color: ${color}; font-weight: ${weight}"
+        >${entry.name}</a></div>`
+      })
+  }
 
   return listing
 }
 
 export async function cd (env, opts = {}, location = '') {
-  await env.setCWD(toCWDLocation(env, location))
+  if (opts.h || opts.help) {
+    return detailedHelp(env, 'cd')
+  }
+  await env.setCWD(resolve(env, location, true))
 }
 
-export function pwd (env) {
-  const cwd = env.getCWD()
-  return `dat://${cwd.host}${cwd.pathname}`
+export function pwd (env, opts = {}) {
+  if (opts.h || opts.help) {
+    return detailedHelp(env, 'pwd')
+  }
+  return env.getCWD().url
 }
 
 // folder manipulation
 // =
 
-export async function mkdir (env, opts, dst) { 
+export async function mkdir (env, opts, dst) {
+  if (opts.h || opts.help) {
+    return detailedHelp(env, 'mkdir')
+  }
   if (!dst) throw new Error('dst is required')
-  const cwd = env.getCWD()
-  dst = toCWDLocation(env, dst)
-  await cwd.archive.mkdir(dst)
-}
-
-export async function rmdir (env, opts, dst) {
-  if (!dst) throw new Error('dst is required')
-  const cwd = env.getCWD()
-  dst = toCWDLocation(env, dst)
-  var opts = {recursive: opts.r || opts.recursive}
-  await cwd.archive.rmdir(dst, opts)
+  var {archive, pathname} = resolveParse(env, dst)
+  await archive.mkdir(pathname)
 }
 
 // file & folder manipulation
 // =
 
 export async function mv (env, opts, src, dst) {
+  if (opts.h || opts.help) {
+    return detailedHelp(env, 'mv')
+  }
   if (!src) throw new Error('src is required')
   if (!dst) throw new Error('dst is required')
-  const cwd = env.getCWD()
-  src = toCWDLocation(env, src)
-  dst = toCWDLocation(env, dst)
-  await cwd.archive.rename(src, dst)
+  var srcp = resolveParse(env, src)
+  var dstp = resolveParse(env, dst)
+  if (srcp.origin === dstp.origin) {
+    await srcp.archive.rename(srcp.pathname, dstp.pathname)
+  } else {
+    let content = await srcp.archive.readFile(srcp.pathname)
+    await dstp.archive.writeFile(dstp.filename, content)
+    await srcp.archive.unlink(srcp.pathname)
+  }
 }
 
 export async function cp (env, opts, src, dst) {
+  if (opts.h || opts.help) {
+    return detailedHelp(env, 'cp')
+  }
   if (!src) throw new Error('src is required')
   if (!dst) throw new Error('dst is required')
-  const cwd = env.getCWD()
-  src = toCWDLocation(env, src)
-  dst = toCWDLocation(env, dst)
-  await cwd.archive.copy(src, dst)
+  var srcp = resolveParse(env, src)
+  var dstp = resolveParse(env, dst)
+  if (srcp.origin === dstp.origin) {
+    await srcp.archive.copy(srcp.pathname, dstp.pathname)
+  } else {
+    let content = await srcp.archive.readFile(srcp.pathname)
+    await dstp.archive.writeFile(dstp.filename, content)
+  }
 }
 
-// file manipulation
-// =
-
 export async function rm (env, opts, dst) {
+  if (opts.h || opts.help) {
+    return detailedHelp(env, 'rm')
+  }
   if (!dst) throw new Error('dst is required')
-  const cwd = env.getCWD()
-  dst = toCWDLocation(env, dst)
-  await cwd.archive.unlink(dst)  
+  var {archive, pathname} = resolveParse(env, dst)
+  await archive.unlink(pathname)  
 }
 
 // utilities
 // =
 
-export async function echo (env, opts, ...args) {
-  var appendFlag = opts.a || opts.append
-  var res = args.join(' ')
-  const cwd = env.getCWD()
-
-  if (opts.to) {
-    let dst = toCWDLocation(env, opts.to)
-    if (appendFlag) {
-      let content = await cwd.archive.readFile(dst, 'utf8')
-      res = content + res
-    }
-    await cwd.archive.writeFile(dst, res)
-  } else {
-    return res
+export async function read (env, opts = {}, location = '') {
+  if (opts.h || opts.help) {
+    return detailedHelp(env, 'read')
   }
+  var {archive, origin, pathname} = resolveParse(env, location)
+  if (/\.(png|jpe?g|gif)$/.test(pathname)) {
+    return {toHTML: () => env.html`<img src=${origin + pathname}>`}
+  }
+  if (/\.(mp4|webm)$/.test(pathname)) {
+    return {toHTML: () => env.html`<video controls><source src=${origin + pathname}></video>`}
+  }
+  if (/\.(mp3|ogg)$/.test(pathname)) {
+    return {toHTML: () => env.html`<audio controls><source src=${origin + pathname}></audio>`}
+  }
+  return archive.readFile(pathname, 'utf8')
+}
+
+export async function write (env, opts, ...args) {
+  if (opts.h || opts.help) {
+    return detailedHelp(env, 'write')
+  }
+  if (!opts.t && !opts.to) throw new Error('--to is required')
+
+  var content = args.join(' ')
+  var {archive, pathname} = resolveParse(env, opts.t || opts.to)
+  await archive.writeFile(pathname, content)
 }
 
 export async function open (env, opts = {}, location = '') {
-  location = toCWDLocation(env, location, true)
-  console.log('opening', location)
-  await env.browser.goto(location)
+  if (opts.h || opts.help) {
+    return detailedHelp(env, 'open')
+  }
+  if (opts.n && !location) location = opts.n
+  location = resolve(env, location, true)
+  if (opts.n) {
+    await env.browser.open(location)
+  } else {
+    await env.browser.goto(location)
+  }
 }
 
 export async function edit (env, opts = {}, location = '') {
-  location = toCWDLocation(env, location, true)
-  await env.browser.goto(location)
-  await env.browser.openSidebar('editor')
+  if (opts.h || opts.help) {
+    return detailedHelp(env, 'edit')
+  }
+  if (opts.n && !location) location = opts.n
+  location = resolve(env, location, true)
+  if (opts.n) {
+    await env.browser.open(location, 'editor')
+  } else {
+    await env.browser.goto(location)
+    await env.browser.openSidebar('editor')
+  }
 }
 
 // internal methods
 // =
 
-function toCWDLocation (env, location, fullUrl = false) {
+function detailedHelp (env, name) {
+  return env.html`<div style="padding: 10px; margin: 5px 0; border: 1px dashed gray">${METHOD_DETAILED_HELP[name](env.html)}</div>`
+}
+
+function resolveParse (env, location) {
+  return parseLocation(resolve(env, location, true))
+}
+
+function parseLocation (location) {
+  var urlp = new URL(location)
+  if (urlp.origin.startsWith('dat://')) {
+    urlp.archive = new DatArchive(urlp.origin)
+  }
+  return urlp
+}
+
+function resolve (env, location, fullUrl = false) {
   const cwd = env.getCWD()
-  location = location.toString()
+
+  // home
   if (location.startsWith('~')) {
     location = joinPath(env.getHome(), location.slice(1))
+  }
+
+  // relative paths
+  if (location.startsWith('./')) {
+    location = location.slice(2) // remove starting ./
   }
   if (!location.startsWith('/') && !location.includes('://')) {
     location = joinPath(cwd.pathname, location)
   }
-  if (fullUrl && !location.includes('://')) {
-    location = `dat://${joinPath(cwd.host, location)}`
+
+  if (!location.includes('://')) {
+    // .. up navs
+    let parts = location.split('/')
+    for (let i = 0; i < parts.length; i++) {
+      if (parts[i] === '..') {
+        if (parts[i - 1]) {
+          // remove parent
+          parts.splice(i - 1, 1)
+          i--
+        }
+        // remove '..'
+        parts.splice(i, 1)
+        i--
+      }
+    }
+    location = parts.join('/')
+
+    // full urls
+    if (fullUrl) {
+      location = `dat://${joinPath(cwd.host, location)}`
+    }
   }
+
   return location
 }
 

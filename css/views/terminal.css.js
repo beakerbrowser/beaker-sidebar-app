@@ -12,6 +12,21 @@ const cssStr = css`
   overflow-y: auto;
 }
 
+a {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+img,
+video,
+audio {
+  max-width: 100%;
+}
+
 .output .entry {
   margin-bottom: 1rem;
 }

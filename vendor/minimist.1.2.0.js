@@ -1,4 +1,13 @@
 /*
+
+NOTE
+Modified by prf to never parse inputs as numbers
+if replaced, you must apply the same patch!
+-prf
+
+*/
+
+/*
 Copyright James "Substack" Halliday 2018
 https://github.com/substack/minimist
 
@@ -80,8 +89,8 @@ export default function (args, opts) {
           if (flags.unknownFn(arg) === false) return;
       }
 
-      var value = !flags.strings[key] && isNumber(val)
-          ? Number(val) : val
+      var value = /*!flags.strings[key] && isNumber(val)
+          ? Number(val) :*/ val.toString() // always use strings -prf
       ;
       setKey(argv, key.split('.'), value);
       
@@ -207,7 +216,7 @@ export default function (args, opts) {
       else {
           if (!flags.unknownFn || flags.unknownFn(arg) !== false) {
               argv._.push(
-                  flags.strings['_'] || !isNumber(arg) ? arg : Number(arg)
+                  arg.toString() // ALWAYS use strings! -prf flags.strings['_'] || !isNumber(arg) ? arg : Number(arg)
               );
           }
           if (opts.stopEarly) {

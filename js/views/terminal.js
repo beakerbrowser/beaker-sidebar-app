@@ -25,11 +25,13 @@ class WebTerm extends LitElement {
     this.builtins = {
       html,
       evalCommand: this.evalCommand.bind(this),
+      appendOutput: this.appendOutput.bind(this),
       getCWD: () => this.cwd,
       setCWD: this.setCWD.bind(this),
       getHome: () => 'dat://pfrazee.com', // TODO
       browser: {
         goto: url => beaker.browser.gotoUrl(url),
+        open: (url, panel = 'terminal') => beaker.browser.openUrl(url, {setActive: true, isSidebarActive: true, sidebarPanel: panel}),
         openSidebar: panel => beaker.browser.openSidebar(panel),
       }
     }
@@ -218,7 +220,9 @@ class WebTerm extends LitElement {
   }
 
   updated () {
-    this.scrollTo(0, this.clientHeight)
+    this.scrollTo(0, this.scrollHeight)
+    setTimeout(() => this.scrollTo(0, this.scrollHeight), 100)
+    // run a second time after 100ms for image loads (hacky, I know)
   }
 
   // events
