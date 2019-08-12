@@ -6,6 +6,7 @@ import sidebarAppCSS from '../css/main.css.js'
 import '/vendor/beaker-app-stdlib/js/com/comments/thread.js'
 import './views/site.js'
 import './views/editor.js'
+import './views/terminal.js'
 
 const profiles = navigator.importSystemAPI('unwalled-garden-profiles')
 const follows = navigator.importSystemAPI('unwalled-garden-follows')
@@ -37,7 +38,7 @@ class SidebarApp extends LitElement {
     this.isViewingPreview = false
 
     document.body.addEventListener('contextmenu', e => {
-      e.preventDefault()
+      // e.preventDefault() RESTOREME
     })
 
     // export an API which is called by the browser
@@ -48,10 +49,7 @@ class SidebarApp extends LitElement {
       this.load()
     }
     window.sidebarShow = () => {
-      if (this.view === 'scratchpad') {
-        // fetch latest on scratchpad to keep tabs in sync
-        this.shadowRoot.querySelector('textarea').value = localStorage.scratchpad
-      }
+      // TODO anything needed on open
     }
   }
 
@@ -108,6 +106,7 @@ class SidebarApp extends LitElement {
         ${navItem('site', html`<span class="fas fa-fw fa-info"></span> About`)}
         ${navItem('editor', html`<span class="far fa-fw fa-edit"></span> Editor`)}
         ${navItem('comments', html`<span class="far fa-fw fa-comment-alt"></span> Comments (${this.commentCount})`)}
+        ${navItem('terminal', html`<span class="fas fa-fw fa-terminal"></span> Terminal`)}
         <span style="flex: 1"></span>
         ${this.renderPreviewModeSelector()}
         <a href="#" @click=${this.onClickClose}><span class="fas fa-fw fa-times"></span></a>
@@ -157,14 +156,11 @@ class SidebarApp extends LitElement {
         </beaker-comments-thread>
       `
     }
-    if (this.view === 'scratchpad') {
+    if (this.view === 'terminal') {
       return html`
-        <div class="scratchpad">
-          <textarea
-            placeholder="Anything you type here will saved automatically."
-            @keyup=${this.onKeyupScratchpad}
-          >${localStorage.scratchpad}</textarea>
-        </div>
+        <web-term
+          url=${this.currentUrl}
+        ></web-term>
       `
     }
     return html`todo`
@@ -219,10 +215,6 @@ class SidebarApp extends LitElement {
 
   onRequestView (e) {
     this.setView(e.detail.view)
-  }
-
-  onKeyupScratchpad (e) {
-    localStorage.scratchpad = e.currentTarget.value
   }
 
   async onAddReaction (e) {
