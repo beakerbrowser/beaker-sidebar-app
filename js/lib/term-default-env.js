@@ -13,7 +13,7 @@ const METHOD_HELP = [
   {name: 'rm', description: 'Remove a file or folder'},
   {name: 'read', description: 'Output the contents of a file'},
   {name: 'write', description: 'Write to a file'},
-  {name: 'goto', description: 'Open the target in the browser'},
+  {name: 'go', description: 'Open the target in the browser'},
   {name: 'edit', description: 'Edit the target in the browser'},
 ]
 
@@ -27,7 +27,7 @@ const METHOD_DETAILED_HELP = {
   rm: html => html`<strong>rm</strong> {target}`,
   read: html => html`<strong>read</strong> {target}`,
   write: html => html`<strong>write</strong> -t|--to {target} {content...}`,
-  goto: html => html`<strong>goto</strong> <span style="color: gray">[-n]</span> {target}`,
+  go: html => html`<strong>go</strong> <span style="color: gray">[-n]</span> {target}`,
   edit: html => html`<strong>edit</strong> <span style="color: gray">[-n]</span> {target}`,
 }
 
@@ -205,9 +205,9 @@ export async function write (env, opts, ...args) {
   await archive.writeFile(pathname, content)
 }
 
-export async function goto (env, opts = {}, location = '') {
+export async function go (env, opts = {}, location = '') {
   if (opts.h || opts.help) {
-    return detailedHelp(env, 'goto')
+    return detailedHelp(env, 'go')
   }
   if (opts.n && !location) location = opts.n
   location = resolve(env, location, true)
