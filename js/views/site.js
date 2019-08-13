@@ -271,6 +271,7 @@ class SidebarSiteView extends LitElement {
               .currentDiff=${this.currentDiff}
               @publish=${this.onPublishAll}
               @revert=${this.onRevertAll}
+              @view=${this.onGotoPreview}
             ></sidebar-revisions>
           ` : ''}
           ${this.renderFollowers()}
@@ -637,6 +638,13 @@ class SidebarSiteView extends LitElement {
     var paths = fileDiffsToPaths(this.currentDiff)
     await beaker.archives.revertLocalSyncPathListing(this.origin, {shallow: false, paths})
     toast.create(`Reverted all changes`, 'success', 1e3)
+  }
+  
+  async onGotoPreview (e) {
+    var urlp = new URL(this.url)
+    var parts = urlp.hostname.split('+')
+    urlp.hostname = `${parts[0]}+preview`
+    beaker.browser.gotoUrl(urlp.toString())
   }
 }
 

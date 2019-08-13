@@ -39,11 +39,16 @@ class SidebarRevisions extends LitElement {
         </div>
         <div class="footer">
           <button class="transparent" @click=${this.onClickPublish}>
-            <span class="fas fa-fw fa-check"></span> Publish all changes
+            <span class="fas fa-fw fa-check"></span> Publish all
           </button>
           <button class="transparent" @click=${this.onClickRevert}>
             <span class="fas fa-fw fa-undo"></span> Revert all
           </button>
+          ${this.origin.includes('+preview') ? '' : html`
+            <button class="transparent" @click=${this.onClickView}>
+              <span class="fas fa-fw fa-eye"></span> View
+            </button>
+          `}
         </div>
       </div>
     `    
@@ -63,6 +68,10 @@ class SidebarRevisions extends LitElement {
 
   onClickRevert (e) {
     emit(this, 'revert', {composed: true, bubbles: true})
+  }
+
+  onClickView (e) {
+    emit(this, 'view', {composed: true, bubbles: true})
   }
 }
 
