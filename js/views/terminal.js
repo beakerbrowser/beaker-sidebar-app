@@ -245,6 +245,8 @@ class WebTerm extends LitElement {
       e.preventDefault()
       this.shadowRoot.querySelector('.prompt input').value = ''
       this.commandHist.reset()
+    } else if (e.code === 'Tab') {
+      e.preventDefault()
     }
   }
   
