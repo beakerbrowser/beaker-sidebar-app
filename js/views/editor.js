@@ -107,8 +107,8 @@ class SidebarEditorView extends LitElement {
   }
 
   async load () {
-    if (!editor) return
-    var url = this.url || ''
+    if (!editor || !this.url) return
+    var url = this.url
 
     // reset the editor
     for (let model of monaco.editor.getModels()) {
@@ -153,7 +153,7 @@ class SidebarEditorView extends LitElement {
       }
 
       // determine the entry to load
-      var entry = await window.datServeResolvePath(archive, manifest, this.url, '*/*')
+      var entry = await window.datServeResolvePath(archive, manifest, url, '*/*')
       this.resolvedPath = entry ? entry.path : this.pathname
 
       // figure out if it's binary
