@@ -71,7 +71,16 @@ class WebTerm extends LitElement {
   }
 
   async load () {
-    this.readCWD()
+    var cwd = this.parseURL(this.url)
+    while (cwd.pathame !== '/') {
+      try {
+        let st = await cwd.archive.stat(cwd.pathname)
+        if (st.isDirectory()) break
+      } catch (e) { /* ignore */ }
+      cwd.pathname = cwd.pathname.split('/').slice(0, -1).join('/')
+    }
+    this.cwd = cwd
+    console.log(cwd)
     await this.importEnvironment()
     await this.appendOutput(html`<div><strong>Welcome to webterm 1.0.</strong> Type <code>help</code> if you get lost.</div>`, this.cwd.pathname)
     this.setFocus()
@@ -111,23 +120,15 @@ class WebTerm extends LitElement {
     }
 
     this.url = location
-    this.readCWD()
+    this.cwd = this.parseURL(this.url)
   }
 
   parseURL (url) {
     if (!url.startsWith('dat://')) url = 'dat://' + url
     let urlp = new URL(url)
-    let host = url.slice(0, url.indexOf('/'))
-    let pathname = url.slice(url.indexOf('/'))
     let archive = new DatArchive(urlp.hostname)
     return {url, host: urlp.hostname, pathname: urlp.pathname, archive}
   }
-
-  readCWD () {
-    this.cwd = this.parseURL(this.url)
-    console.log('CWD', this.cwd)
-  }
-
   appendOutput (output, thenCWD, cmd) {
     if (typeof output === 'undefined') {
       output = 'Ok.'
@@ -207,6 +208,7 @@ class WebTerm extends LitElement {
   // =
 
   render () {
+    if (!this.cwd) return html`<div></div>`
     return html`
       <div class="wrapper" @keydown=${this.onKeyDown}>
         <div class="output">

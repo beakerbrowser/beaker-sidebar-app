@@ -73,9 +73,13 @@ class SidebarApp extends LitElement {
     this.previewMode = false
     this.isViewingPreview = false
     if (this.currentUrl.startsWith('dat://')) {
-      let info = await (new DatArchive(this.currentUrl)).getInfo()
-      this.previewMode = info.userSettings.previewMode
-      this.isViewingPreview = (new URL(this.currentUrl)).hostname.includes('+preview')
+      try {
+        let info = await (new DatArchive(this.currentUrl)).getInfo()
+        this.previewMode = info.userSettings.previewMode
+        this.isViewingPreview = (new URL(this.currentUrl)).hostname.includes('+preview')
+      } catch (e) {
+        // ignore
+      }
     }
     
     this.isLoading = false
