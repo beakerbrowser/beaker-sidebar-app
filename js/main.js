@@ -100,7 +100,7 @@ class SidebarApp extends LitElement {
   // =
 
   render () {
-    if (!this.user || this.isLoading) return html`<div></div>`
+    if (!this.user) return html`<div></div>`
     const navItem = (id, label) => html`
       <a href="#" class="${classMap({current: id === this.view})}" @click=${e => this.onClickNavItem(e, id)}>${label}</a>
     `

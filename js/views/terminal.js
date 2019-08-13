@@ -80,9 +80,13 @@ class WebTerm extends LitElement {
       cwd.pathname = cwd.pathname.split('/').slice(0, -1).join('/')
     }
     this.cwd = cwd
-    console.log(cwd)
-    await this.importEnvironment()
-    await this.appendOutput(html`<div><strong>Welcome to webterm 1.0.</strong> Type <code>help</code> if you get lost.</div>`, this.cwd.pathname)
+
+    if (!this.isLoaded) {
+      await this.importEnvironment()
+      await this.appendOutput(html`<div><strong>Welcome to webterm 1.0.</strong> Type <code>help</code> if you get lost.</div>`, this.cwd.pathname)
+      this.isLoaded = true
+    }
+
     this.setFocus()
     this.requestUpdate()
   }
@@ -127,8 +131,9 @@ class WebTerm extends LitElement {
     if (!url.startsWith('dat://')) url = 'dat://' + url
     let urlp = new URL(url)
     let archive = new DatArchive(urlp.hostname)
-    return {url, host: urlp.hostname, pathname: urlp.pathname, archive}
+    return {url, origin: urlp.origin, host: urlp.hostname, pathname: urlp.pathname, archive}
   }
+
   appendOutput (output, thenCWD, cmd) {
     if (typeof output === 'undefined') {
       output = 'Ok.'
@@ -188,7 +193,7 @@ class WebTerm extends LitElement {
   async evalCommand (command) {
     try {
       var res
-      var oldCWD = Object.assign({}, this.env.getCWD())
+      var oldCWD = Object.assign({}, this.cwd)
       var codeToEval = this.parseCommand(command)
       res = await eval(codeToEval)
       this.appendOutput(res, oldCWD, command)
