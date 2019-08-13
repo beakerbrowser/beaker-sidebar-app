@@ -172,7 +172,7 @@ class WebTerm extends LitElement {
     delete argsParsed._
     args.unshift(argsParsed) // opts always go first
 
-    return `this.env['${cmd}'](this.env, ${args.map(JSON.stringify).join(', ')})`
+    return `this.env[${JSON.stringify(cmd)}](this.env, ${args.map(JSON.stringify).join(', ')})`
   }
 
   evalPrompt () {
