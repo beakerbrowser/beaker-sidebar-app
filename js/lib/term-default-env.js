@@ -171,7 +171,12 @@ export async function rm (env, opts, dst) {
   }
   if (!dst) throw new Error('dst is required')
   var {archive, pathname} = resolveParse(env, dst)
-  await archive.unlink(pathname)  
+  var st = await archive.stat(pathname)
+  if (st.isDirectory()) {
+    await archive.rmdir(pathname, {recursive: true})
+  } else {
+    await archive.unlink(pathname)
+  }
 }
 
 // utilities
