@@ -193,7 +193,7 @@ class WebTerm extends LitElement {
       res = await eval(codeToEval)
       this.appendOutput(res, oldCWD, command)
     } catch (err) {
-      if (err.toString() === `TypeError: this.env.${command} is not a function`) {
+      if (err.toString().startsWith('TypeError: this.env')) {
         err = `Invalid command: ${command}`
       }
       this.appendError('Command error', err, oldCWD, command)
