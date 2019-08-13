@@ -136,6 +136,7 @@ class SidebarApp extends LitElement {
           url=${this.currentUrl}
           .user=${this.user}
           .feedAuthors=${this.feedAuthors}
+          @reload=${this.load}
         ></sidebar-site-view>
       `
     }

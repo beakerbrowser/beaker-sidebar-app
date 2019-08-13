@@ -2,6 +2,7 @@ import { LitElement, html } from '/vendor/beaker-app-stdlib/vendor/lit-element/l
 import { repeat } from '/vendor/beaker-app-stdlib/vendor/lit-element/lit-html/directives/repeat.js'
 import * as toast from '/vendor/beaker-app-stdlib/js/com/toast.js'
 import { pluralize } from '/vendor/beaker-app-stdlib/js/strings.js'
+import { emit } from '/vendor/beaker-app-stdlib/js/dom.js'
 import sidebarSiteViewCSS from '../../css/views/site.css.js'
 import '../com/user-session.js'
 import '../com/requested-perms.js'
@@ -607,6 +608,7 @@ class SidebarSiteView extends LitElement {
     try {
       isPreviewModeEnabled = !isPreviewModeEnabled
       await beaker.archives.setUserSettings(this.origin, {previewMode: isPreviewModeEnabled})
+      emit(this, 'reload', {composed: true, bubbles: true})
       this.load()
     } catch (e) {
       toast.create(e.toString(), 'error', 5e3)
