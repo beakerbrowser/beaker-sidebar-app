@@ -1,3 +1,5 @@
+import { createArchive } from './term-archive-wrapper.js'
+
 // interactive help
 // =
 
@@ -52,12 +54,14 @@ export async function ls (env, opts = {}, location = '') {
 
   // pick target location
   location = resolve(env, location, true)
-  var {archive, pathname} = parseLocation(location)
+  var {archive, protocol, pathname} = parseLocation(location)
 
   // read
   var listing
   var st = await archive.stat(pathname)
-  if (st.isFile()) {
+  if (st.isUnsupportedProtocol) {
+    listing = {toHTML: () => env.html`Unknown endpoint on ${protocol} protocol`}
+  } else if (st.isFile()) {
     listing = st
     listing.toHTML = () => env.html`Is a file.
 Size: ${listing.size}`
@@ -241,9 +245,7 @@ function resolveParse (env, location) {
 
 function parseLocation (location) {
   var urlp = new URL(location)
-  if (urlp.origin.startsWith('dat://')) {
-    urlp.archive = new DatArchive(urlp.origin)
-  }
+  urlp.archive = createArchive(urlp.toString())
   return urlp
 }
 
@@ -282,7 +284,7 @@ function resolve (env, location, fullUrl = false) {
 
     // full urls
     if (fullUrl) {
-      location = `dat://${joinPath(cwd.host, location)}`
+      location = joinPath(cwd.origin, location)
     }
   }
 

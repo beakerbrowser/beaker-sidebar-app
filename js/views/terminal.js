@@ -1,5 +1,6 @@
 import { LitElement, html, TemplateResult } from '/vendor/beaker-app-stdlib/vendor/lit-element/lit-element.js'
 import minimist from '/vendor/minimist.1.2.0.js'
+import { createArchive } from '../lib/term-archive-wrapper.js'
 import { joinPath } from '/vendor/beaker-app-stdlib/js/strings.js'
 import terminalCSS from '../../css/views/terminal.css.js'
 
@@ -108,16 +109,21 @@ class WebTerm extends LitElement {
 
   async setCWD (location) {
     var locationParsed
-    try {
+    if (location.startsWith('dat://')) {
+      try {
+        locationParsed = new URL(location)
+        location = `${locationParsed.host}${locationParsed.pathname}`
+      } catch (err) {
+        location = `${this.cwd.host}${joinPath(this.cwd.pathname, location)}`
+      }
+      locationParsed = new URL('dat://' + location)
+      console.log(locationParsed.toString())
+    } else {
       locationParsed = new URL(location)
-      location = `${locationParsed.host}${locationParsed.pathname}`
-    } catch (err) {
-      location = `${this.cwd.host}${joinPath(this.cwd.pathname, location)}`
     }
-    locationParsed = new URL('dat://' + location)
 
     // make sure the destination exists
-    let archive = new DatArchive(locationParsed.host)
+    let archive = createArchive(locationParsed.toString())
     let st = await archive.stat(locationParsed.pathname)
     if (!st.isDirectory()) {
       throw new Error('Not a directory')
@@ -128,9 +134,9 @@ class WebTerm extends LitElement {
   }
 
   parseURL (url) {
-    if (!url.startsWith('dat://')) url = 'dat://' + url
+    if (!url.includes('://')) url = 'dat://' + url
     let urlp = new URL(url)
-    let archive = new DatArchive(urlp.hostname)
+    let archive = createArchive(urlp.origin)
     return {url, origin: urlp.origin, host: urlp.hostname, pathname: urlp.pathname, archive}
   }
 
