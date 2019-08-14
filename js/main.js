@@ -44,6 +44,13 @@ class SidebarApp extends LitElement {
     // export an API which is called by the browser
     window.sidebarGetCurrentApp = () => this.view
     window.sidebarLoad = (url, app) => {
+      if (url.startsWith('beaker:')) {
+        // always show the user's home dat rather than beaker
+        const HOME_DAT = 'dat://pfrazee.com/' // TODO
+        if (this.currentUrl.startsWith(HOME_DAT)) return // already loaded
+        url = HOME_DAT
+      }
+
       this.currentUrl = url
       this.setView(app || this.view || 'site')
       this.load()
