@@ -42,16 +42,38 @@ hr {
 .primary-action {
   display: flex;
   align-items: center;
-  margin-bottom: 26px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #fff;
+}
+
+.primary-action .btns {
+  display: flex;
+  align-items: center;
+  padding: 5px 10px;
 }
 
 .primary-action button.transparent {
   padding: 5px 6px;
 }
 
+.primary-action .nav a {
+  border-left: 1px solid #ccc;
+  padding: 10px 14px;
+  cursor: pointer;
+}
+
+.primary-action .nav a:hover {
+  background: rgb(245, 245, 245);
+}
+
 .inner {
+  height: inherit;
   overflow-y: auto;
-  padding: 5px 10px 15px;
+  padding: 10px 10px 15px;
+  border-top: 1px solid #ccc;
+  background: #f5f5f5;
 }
 
 .site-info {
@@ -133,12 +155,12 @@ sidebar-files {
   border-radius: 3px;
   padding-bottom: 2px;
   overflow: hidden;
+  background: #fff;
 }
 
 .columns-layout {
   column-count: 2;
   column-gap: 10px;
-  margin-bottom: 10px;
 }
 
 .columns-layout > * {

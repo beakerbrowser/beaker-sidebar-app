@@ -18,6 +18,7 @@ class SidebarSiteView extends LitElement {
   static get properties () {
     return {
       url: {type: String},
+      view: {type: String},
       user: {type: Object},
       feedAuthors: {type: Array},
       isLoading: {type: Boolean},
@@ -101,6 +102,7 @@ class SidebarSiteView extends LitElement {
     super()
     this.fileActStreams = null
     this.url = ''
+    this.view = 'files'
     this.user = null
     this.feedAuthors = []
     this.isLoading = true
@@ -261,54 +263,79 @@ class SidebarSiteView extends LitElement {
           </div>
         ` : ''}
 
-        <div class="columns-layout">
-          ${!this.readOnly && this.currentDiff && this.currentDiff.length ? html`
-            <sidebar-revisions
-              origin=${this.origin}
-              .currentDiff=${this.currentDiff}
-              @publish=${this.onPublishAll}
-              @revert=${this.onRevertAll}
-              @view=${this.onGotoPreview}
-            ></sidebar-revisions>
-          ` : ''}
-          ${this.renderFollowers()}
-          ${this.renderFollows()}
-
-          <sidebar-user-session
-            origin=${this.origin}
-          ></sidebar-user-session>
-          <sidebar-requested-perms
-            origin=${this.origin}
-            .perms=${this.requestedPerms}
-          ></sidebar-requested-perms>
-
-          ${!this.readOnly ? html`
-            <div class="field-group">
-              <div class="field-group-title">Preview mode</div>
-              <p>
-                <button @click=${this.onTogglePreviewMode}>
-                  <span class="fas fa-fw fa-hammer"></span>
-                  Preview Mode: <strong>${this.isPreviewModeEnabled ? 'On' : 'Off'}</strong>
-                </button>
-              </p>
-              <p class="help">
-                <span class="fas fa-fw fa-info"></span>
-                Preview mode lets you see changes in a private version of the site.
-                You can review the changes before publishing.
-              </p>
-            </div>
-            <sidebar-local-folder
-              origin=${this.origin}
-              .info=${this.info}
-              @request-load=${this.onRequestLoad}
-            ></sidebar-local-folder>
-          ` : ''}
-        </div>
-
-        ${this.isDat ? html`
+        ${this.isDat && this.view === 'files' ? html`
           <sidebar-files
             url=${this.url}
           ></sidebar-files>
+        ` : ''}
+
+        ${this.isDat && this.view === 'settings' ? html`
+          <div class="columns-layout">
+            ${!this.readOnly && this.currentDiff && this.currentDiff.length ? html`
+              <sidebar-revisions
+                origin=${this.origin}
+                .currentDiff=${this.currentDiff}
+                @publish=${this.onPublishAll}
+                @revert=${this.onRevertAll}
+                @view=${this.onGotoPreview}
+              ></sidebar-revisions>
+            ` : ''}
+            ${this.renderFollowers()}
+            ${this.renderFollows()}
+
+            <sidebar-user-session
+              origin=${this.origin}
+            ></sidebar-user-session>
+            <sidebar-requested-perms
+              origin=${this.origin}
+              .perms=${this.requestedPerms}
+            ></sidebar-requested-perms>
+
+            ${!this.readOnly ? html`
+              <div class="field-group">
+                <div class="field-group-title">Preview mode</div>
+                <p>
+                  <button @click=${this.onTogglePreviewMode}>
+                    <span class="fas fa-fw fa-hammer"></span>
+                    Preview Mode: <strong>${this.isPreviewModeEnabled ? 'On' : 'Off'}</strong>
+                  </button>
+                </p>
+                <p class="help">
+                  <span class="fas fa-fw fa-info"></span>
+                  Preview mode lets you see changes in a private version of the site.
+                  You can review the changes before publishing.
+                </p>
+              </div>
+
+              <sidebar-local-folder
+                origin=${this.origin}
+                .info=${this.info}
+                @request-load=${this.onRequestLoad}
+              ></sidebar-local-folder>
+            ` : ''}
+
+            <div class="field-group">
+              <div class="field-group-title">Theme</div>
+              <p>
+                <button disabled data-tooltip="Todo">
+                  <span class="fas fa-fw fa-drafting-compass"></span>
+                  Theme: None
+                  <span class="fas fa-caret-down"></span>
+                </button>
+              </p>
+            </div>
+            
+            <div class="field-group">
+              <div class="field-group-title">License</div>
+              <p>
+                <button disabled data-tooltip="Todo">
+                  <span class="fas fa-fw fa-balance-scale"></span>
+                  License: None
+                  <span class="fas fa-caret-down"></span>
+                </button>
+              </p>
+            </div>
+          </div>
         ` : ''}
       </div>
     `
@@ -414,18 +441,11 @@ class SidebarSiteView extends LitElement {
     }
 
     var adminCtrls = ''
-    if (!this.readOnly) {
+    if (!this.readOnly && !this.isLocalUser) {
       adminCtrls = html`
-        ${!this.isLocalUser ? html`
-          <button class="transparent" disabled data-tooltip="todo">
-            <span class="fas fa-fw fa-bullhorn"></span>
-            Publish on my profile
-          </button>
-        ` : ''}
         <button class="transparent" disabled data-tooltip="todo">
-          <span class="fas fa-fw fa-drafting-compass"></span>
-          Theme: None
-          <span class="fas fa-caret-down"></span>
+          <span class="fas fa-fw fa-bullhorn"></span>
+          Publish on my profile
         </button>
       `
     }
@@ -450,10 +470,22 @@ class SidebarSiteView extends LitElement {
     }
     return html`
       <div class="primary-action">
-        ${typeBtn}
-        ${adminCtrls}
-        <button class="transparent" disabled data-tooltip="todo"><span class="fas fa-fw fa-balance-scale"></span> License: None <span class="fas fa-caret-down"></span></button>
-        ${saveBtn}
+        <div class="btns">
+          ${typeBtn}
+          ${adminCtrls}
+          ${saveBtn}
+        </div>
+        <div style="flex: 1"></div>
+        <div class="nav">
+          <a @click=${e => this.onSetView(e, 'files')}>
+            <span class="far fa-fw fa-file"></span>
+            Files
+          </a>
+          <a @click=${e => this.onSetView(e, 'settings')}>
+            <span class="fas fa-fw fa-cog"></span>
+            Settings
+          </a>
+        </div>
       </div>
     `
   }
@@ -509,6 +541,11 @@ class SidebarSiteView extends LitElement {
 
   onRequestLoad (e) {
     this.load()
+  }
+
+  onSetView (e, view) {
+    e.preventDefault()
+    this.view = view
   }
 
   onClickLink (e, href, aux) {
