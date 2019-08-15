@@ -47,10 +47,6 @@ class SidebarSiteView extends LitElement {
     return this.url && this.url.startsWith('http:')
   }
 
-  get isBeaker () {
-    return this.url && this.url.startsWith('beaker:')
-  }
-
   get archive () {
     return new DatArchive(this.url)
   }
@@ -190,7 +186,7 @@ class SidebarSiteView extends LitElement {
     } else {
       this.info = {
         title: this.hostname,
-        domain: this.isHttps || this.isBeaker ? this.hostname : undefined  
+        domain: this.isHttps ? this.hostname : undefined  
       }
     }
 
@@ -346,7 +342,6 @@ class SidebarSiteView extends LitElement {
             </h1>
           `}
           ${this.isPerson ? html`<p><span class="far fa-fw fa-user-circle"></span> Personal website</p>` : ''}
-          ${this.isBeaker ? html`<p><img src="beaker://assets/logo.png" style="width: 16px; position: relative; top: 4px"> Beaker Application</p>` : ''}
           ${this.isDat
             ? this.readOnly
               ? html`
