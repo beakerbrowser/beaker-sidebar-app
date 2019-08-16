@@ -1,6 +1,8 @@
 import { LitElement, html, TemplateResult } from '/vendor/beaker-app-stdlib/vendor/lit-element/lit-element.js'
 import minimist from '/vendor/minimist.1.2.0.js'
 import { createArchive } from '../lib/term-archive-wrapper.js'
+import { handleDatArchiveRequests } from '../lib/iframe-shim-dat-archive.js'
+import { inflateNode } from '../lib/iframe-dom-transport.js'
 import { joinPath, DAT_KEY_REGEX } from '/vendor/beaker-app-stdlib/js/strings.js'
 import terminalCSS from '../../css/views/terminal.css.js'
 
@@ -23,6 +25,7 @@ class WebTerm extends LitElement {
     this.cwd = null
     this.outputHist = []
     this.homeUrl = null
+    this.sandbox = document.querySelector('iframe[sandbox]')
 
     this.builtins = {
       html,
@@ -88,6 +91,7 @@ class WebTerm extends LitElement {
     this.cwd = cwd
 
     if (!this.isLoaded) {
+      handleDatArchiveRequests()
       await this.importEnvironment()
       await this.appendOutput(html`<div><strong>Welcome to webterm 1.0.</strong> Type <code>help</code> if you get lost.</div>`, this.cwd.pathname)
       this.isLoaded = true
@@ -146,14 +150,8 @@ class WebTerm extends LitElement {
   }
 
   appendOutput (output, thenCWD, cmd) {
-    if (typeof output === 'undefined') {
-      output = 'Ok.'
-    } else if (output.toHTML) {
-      output = output.toHTML()
-    } else if (typeof output !== 'string' && !(output instanceof TemplateResult)) {
-      output = JSON.stringify(output).replace(/^"|"$/g, '')
-    }
     thenCWD = thenCWD || this.cwd
+
     this.outputHist.push(html`
       <div class="entry">
         <div class="entry-header">${this.isHome(thenCWD.host) ? '~' : shortenHash(thenCWD.host)}${thenCWD.pathname}&gt; ${cmd || ''}</div>
@@ -188,7 +186,7 @@ class WebTerm extends LitElement {
     delete argsParsed._
     args.unshift(argsParsed) // opts always go first
 
-    return `this.env[${JSON.stringify(cmd)}](this.env, ${args.map(JSON.stringify).join(', ')})`
+    return {cmd, args}
   }
 
   evalPrompt () {
@@ -203,17 +201,52 @@ class WebTerm extends LitElement {
   
   async evalCommand (command) {
     try {
-      var res
       var oldCWD = Object.assign({}, this.cwd)
-      var codeToEval = this.parseCommand(command)
-      res = await eval(codeToEval)
+      var {cmd, args} = this.parseCommand(command)
+      var res = typeof this.env[cmd] === 'function'
+        ? await this.evalBuiltin(cmd, args)
+        : await this.evalSandbox(cmd, args)
       this.appendOutput(res, oldCWD, command)
     } catch (err) {
-      if (err.toString().startsWith('TypeError: this.env')) {
-        err = `Invalid command: ${command}`
-      }
+      console.error(err)
       this.appendError('Command error', err, oldCWD, command)
     }
+  }
+
+  async evalBuiltin (cmd, args) {
+    let output = await this.env[cmd](this.env, ...args)
+
+    if (typeof output === 'undefined') {
+      return 'Ok.'
+    } else if (output.toHTML) {
+      return output.toHTML()
+    } else if (typeof output !== 'string' && !(output instanceof TemplateResult)) {
+      return JSON.stringify(output).replace(/^"|"$/g, '')
+    }
+  }
+
+  evalSandbox (cmd, args) {
+    return new Promise((resolve, reject) => {
+      // Unique token to identify sandbox response
+      var token = Math.random()
+
+      // Refresh iframe before evaluation for clean execution environment
+      this.sandbox.addEventListener('load', send.bind(this))
+      this.sandbox.src = this.sandbox.src
+
+      function send () {
+        window.addEventListener('message', listen)
+        window.frames[0].postMessage({type: 'prompt:eval', cwd: this.cwd, cmd, args, token}, '*')
+        this.sandbox.removeEventListener('load', send)
+      }
+
+      function listen ({data}) {
+        if (data.token !== token) return
+        window.removeEventListener('message', listen)
+        if (data.type === 'prompt:err') reject(rebuildError(data.error))
+        else resolve(inflateNode(data.output))
+      }
+    })
   }
 
   setFocus () {
@@ -285,6 +318,13 @@ customElements.define('web-term', WebTerm)
 
 // helpers
 //
+
+function rebuildError (obj) {
+  let err = new Error(obj.message)
+  err.name = obj.name || err.name
+  err.stack = obj.stack || err.stack
+  return err
+}
 
 function shortenHash (str = '') {
   return str.replace(/[0-9a-f]{64}/ig, v => `${v.slice(0, 6)}..${v.slice(-2)}`)

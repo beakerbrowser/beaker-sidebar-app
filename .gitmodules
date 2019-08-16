@@ -1,0 +1,3 @@
+[submodule "vendor/beaker-app-stdlib"]
+	path = vendor/beaker-app-stdlib
+	url = https://github.com/beakerbrowser/beaker-app-stdlib
