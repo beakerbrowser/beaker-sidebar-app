@@ -51,14 +51,29 @@ hr {
 .primary-action .btns {
   display: flex;
   align-items: center;
-  padding: 5px 10px;
-}
-
-.primary-action button.transparent {
   padding: 5px 6px;
 }
 
+.primary-action .btns button {
+  padding: 5px 6px;
+  margin-right: 4px;
+}
+
+.primary-action .btns button.light-pressed {
+  background: #eee;
+}
+
+.primary-action .btns button.light-pressed:hover {
+  background: #f5f5f5;
+}
+
+.primary-action .nav {
+  display: flex;
+}
+
 .primary-action .nav a {
+  text-align: center;
+  font-size: 11px;
   border-left: 1px solid #ccc;
   padding: 10px 14px;
   cursor: pointer;

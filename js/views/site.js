@@ -90,6 +90,10 @@ class SidebarSiteView extends LitElement {
     return this.info && this.info.userSettings && this.info.userSettings.isSaved
   }
 
+  get isAutoUploadEnabled () {
+    return this.info && this.info.userSettings && this.info.userSettings.autoUpload
+  }
+
   get isFollowing () {
     return this.user && this.followers && this.followers.find(u => u.url === this.user.url)
   }
@@ -264,25 +268,29 @@ class SidebarSiteView extends LitElement {
         ` : ''}
 
         ${this.isDat && this.view === 'files' ? html`
+          ${!this.readOnly && this.currentDiff && this.currentDiff.length ? html`
+            <sidebar-revisions
+              origin=${this.origin}
+              .currentDiff=${this.currentDiff}
+              @publish=${this.onPublishAll}
+              @revert=${this.onRevertAll}
+              @view=${this.onGotoPreview}
+            ></sidebar-revisions>
+          ` : ''}
           <sidebar-files
             url=${this.url}
           ></sidebar-files>
         ` : ''}
 
-        ${this.isDat && this.view === 'settings' ? html`
+        ${this.isDat && this.view === 'social' ? html`
           <div class="columns-layout">
-            ${!this.readOnly && this.currentDiff && this.currentDiff.length ? html`
-              <sidebar-revisions
-                origin=${this.origin}
-                .currentDiff=${this.currentDiff}
-                @publish=${this.onPublishAll}
-                @revert=${this.onRevertAll}
-                @view=${this.onGotoPreview}
-              ></sidebar-revisions>
-            ` : ''}
             ${this.renderFollowers()}
             ${this.renderFollows()}
+          </div>
+        ` : ''}
 
+        ${this.isDat && this.view === 'settings' ? html`
+          <div class="columns-layout">
             <sidebar-user-session
               origin=${this.origin}
             ></sidebar-user-session>
@@ -290,6 +298,82 @@ class SidebarSiteView extends LitElement {
               origin=${this.origin}
               .perms=${this.requestedPerms}
             ></sidebar-requested-perms>
+            
+            <div class="field-group">
+              <div class="field-group-title">Manage</div>
+              <p>
+                ${this.isSaved && this.isAutoUploadEnabled ? html`
+                  <button @click=${this.onClickUnhost}>
+                    <span class="fas fa-fw fa-times"></span>
+                    Stop hosting
+                  </button>
+                ` : html`
+                  <button @click=${this.onClickHost}>
+                    <span class="fas fa-fw fa-cloud-upload-alt"></span>
+                    Host
+                  </button>
+                `}
+              </p>
+              <p class="help" style="margin-bottom: 15px">
+                <span class="fas fa-fw fa-info"></span>
+                ${this.isSaved && this.isAutoUploadEnabled ? html`
+                  You are hosting this site. Hosting helps keep the site online.
+                ` : html`
+                  Hosting this site will keep it online.
+                `}
+              </p>
+              <p>
+                ${this.isSaved ? html`
+                  <button @click=${this.onClickUnsave}>
+                    <span class="fas fa-fw fa-trash"></span>
+                    Move to trash
+                  </button>
+                ` : html`
+                  <button @click=${this.onClickSave}>
+                    <span class="fas fa-fw fa-save"></span>
+                    Save to my websites
+                  </button>
+                `}
+              </p>
+              <p class="help">
+                <span class="fas fa-fw fa-info"></span>
+                ${this.isSaved ? html`
+                  This site is saved to your websites. Moving to trash will queue it for deletion.
+                ` : html`
+                  Saving this site will download its files for offline access.
+                `}
+              </p>
+            </div>
+
+            <div class="field-group">
+              <div class="field-group-title">Theme</div>
+              <p>
+                <button disabled data-tooltip="Todo">
+                  <span class="fas fa-fw fa-drafting-compass"></span>
+                  Theme: None
+                  <span class="fas fa-caret-down"></span>
+                </button>
+              </p>
+              <p class="help">
+                <span class="fas fa-fw fa-info"></span>
+                The theme decorates the pages of this site by adding scripts and styles automatically.
+              </p>
+            </div>
+            
+            <div class="field-group">
+              <div class="field-group-title">License</div>
+              <p>
+                <button disabled data-tooltip="Todo">
+                  <span class="fas fa-fw fa-balance-scale"></span>
+                  License: None
+                  <span class="fas fa-caret-down"></span>
+                </button>
+              </p>
+              <p class="help">
+                <span class="fas fa-fw fa-info"></span>
+                The license determines how visitors are allowed to use the copyrighted work in this website.
+              </p>
+            </div>
 
             ${!this.readOnly ? html`
               <div class="field-group">
@@ -313,28 +397,6 @@ class SidebarSiteView extends LitElement {
                 @request-load=${this.onRequestLoad}
               ></sidebar-local-folder>
             ` : ''}
-
-            <div class="field-group">
-              <div class="field-group-title">Theme</div>
-              <p>
-                <button disabled data-tooltip="Todo">
-                  <span class="fas fa-fw fa-drafting-compass"></span>
-                  Theme: None
-                  <span class="fas fa-caret-down"></span>
-                </button>
-              </p>
-            </div>
-            
-            <div class="field-group">
-              <div class="field-group-title">License</div>
-              <p>
-                <button disabled data-tooltip="Todo">
-                  <span class="fas fa-fw fa-balance-scale"></span>
-                  License: None
-                  <span class="fas fa-caret-down"></span>
-                </button>
-              </p>
-            </div>
           </div>
         ` : ''}
       </div>
@@ -425,45 +487,35 @@ class SidebarSiteView extends LitElement {
     if (this.isPerson && this.readOnly) {
       if (this.isFollowing) {
         typeBtn = html`
-          <button class="transparent" ?disabled=${disabled} @click=${this.onClickUnfollow}>
-            <span class="fas fa-fw fa-times"></span>
-            Unfollow ${this.info.title || 'this site'}
+          <button class="transparent light-pressed" ?disabled=${disabled} @click=${this.onClickUnfollow}>
+            <span class="fas fa-fw fa-rss"></span>
+            Following
           </button>
         `
       } else {
         typeBtn = html`
-          <button class="primary" ?disabled=${disabled} @click=${this.onClickFollow}>
+          <button class="transparent" ?disabled=${disabled} @click=${this.onClickFollow}>
             <span class="fas fa-fw fa-rss"></span>
-            Follow ${this.info.title || 'this site'}
+            Follow
           </button>
         `
       }
     }
 
-    var adminCtrls = ''
-    if (!this.readOnly && !this.isLocalUser) {
-      adminCtrls = html`
-        <button class="transparent" disabled data-tooltip="todo">
-          <span class="fas fa-fw fa-bullhorn"></span>
-          Publish on my profile
-        </button>
-      `
-    }
-
     var saveBtn = ''
     if (!this.isLocalUser) {
-      if (this.isSaved) {
+      if (this.isSaved && this.isAutoUploadEnabled) {
         saveBtn = html`
-          <button class="transparent" @click=${this.onClickUnsave}>
-            <span class="fas fa-fw fa-trash"></span>
-            ${this.readOnly ? 'Remove from my websites' : 'Move to trash'}
+          <button class="transparent light-pressed" @click=${this.onClickUnhost}>
+            <span class="fas fa-fw fa-cloud-upload-alt"></span>
+            Hosting
           </button>
         `
       } else {
         saveBtn = html`
-          <button class="transparent" @click=${this.onClickSave}>
-            <span class="far fa-fw fa-save"></span>
-            Save to my websites
+          <button class="transparent" @click=${this.onClickHost}>
+            <span class="fas fa-fw fa-cloud-upload-alt"></span>
+            Host
           </button>
         `
       }
@@ -472,7 +524,6 @@ class SidebarSiteView extends LitElement {
       <div class="primary-action">
         <div class="btns">
           ${typeBtn}
-          ${adminCtrls}
           ${saveBtn}
         </div>
         <div style="flex: 1"></div>
@@ -481,6 +532,12 @@ class SidebarSiteView extends LitElement {
             <span class="far fa-fw fa-file"></span>
             Files
           </a>
+          ${this.isPerson ? html`
+            <a @click=${e => this.onSetView(e, 'social')}>
+              <span class="far fa-fw fa-user-circle"></span>
+              Social
+            </a>
+          ` : ''}
           <a @click=${e => this.onSetView(e, 'settings')}>
             <span class="fas fa-fw fa-cog"></span>
             Settings
@@ -494,7 +551,7 @@ class SidebarSiteView extends LitElement {
     if (this.followers && this.followers.length) {
       return html`
         <div class="field-group">
-          <div class="field-group-title">${this.followers.length} ${pluralize(this.followers.length, 'follower')}</div>            
+          <div class="field-group-title">Following ${this.info.title || 'this site'}</div>            
           <div class="followers">
             ${repeat(this.followers, user => html`
               <a
@@ -598,6 +655,16 @@ class SidebarSiteView extends LitElement {
       this.requestUpdate()
     }
     fr.readAsDataURL(file)
+  }
+
+  async onClickHost (e) {
+    await beaker.archives.add(this.origin, {autoUpload: true})
+    this.load()
+  }
+
+  async onClickUnhost (e) {
+    await beaker.archives.setUserSettings(this.origin, {autoUpload: false})
+    this.load()
   }
 
   async onClickSave (e) {
