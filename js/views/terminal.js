@@ -218,9 +218,11 @@ class WebTerm extends LitElement {
 
     if (typeof output === 'undefined') {
       return 'Ok.'
+    } else if (typeof output === 'string') {
+      return output
     } else if (output.toHTML) {
       return output.toHTML()
-    } else if (typeof output !== 'string' && !(output instanceof TemplateResult)) {
+    } else if (!(output instanceof TemplateResult)) {
       return JSON.stringify(output).replace(/^"|"$/g, '')
     }
   }
