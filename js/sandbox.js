@@ -52,9 +52,7 @@ async function load (cmd) {
 }
 
 function pre (text) {
-  var el = document.createElement('pre')
-  el.innerText = text
-  return el
+  return document.createTextNode(text)
 }
 
 function send (data) {
