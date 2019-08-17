@@ -1,5 +1,11 @@
-const FORBIDDEN_NODES = ['iframe', 'link', 'meta', 'script', 'style']
 const IGNORED_ATTRS = ['style']
+const FORBIDDEN_NODES = [
+  'html', 'head', 'body', 'base',
+  'link', 'meta', 'script', 'style',
+  'iframe', 'embed', 'object', 'canvas',
+  'form', 'input', 'datalist', 'textarea',
+  'select', 'option', 'optgroup', 'button'
+]
 
 export function sanitizeNode (node) {
   return inflateNode(deflateNode(node))
