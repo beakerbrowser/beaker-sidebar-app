@@ -33,11 +33,22 @@ async function evaluate (cmd, args, token) {
 }
 
 async function load (cmd) {
-  var path = joinPath(window.cwd.url, cmd)
-  if (!path.endsWith('.js')) {
-    path += '.js'
+  var url
+
+  try {
+    url = new URL(cmd)
+  } catch (err) {
+    url = new URL(joinPath(window.cwd.url, cmd))
   }
-  return import(path)
+  if (!url.pathname.endsWith('.js')) {
+    url.pathname += '.js'
+  }
+
+  try {
+    return await import(url)
+  } catch (err) {
+    throw new Error('Command not found: ' + cmd)
+  }
 }
 
 function pre (text) {
