@@ -8,15 +8,16 @@ if (typeof window.DatArchive === 'undefined') {
 
 window.addEventListener('message', function receive ({data}) {
   if (data.type !== 'prompt:eval') return
+  window.cmd = data.cmd
   window.cwd = data.cwd
-  evaluate(data.cmd, data.args, data.token)
+  evaluate(data.opts, data.args, data.token)
 })
 
-async function evaluate (cmd, args, token) {
+async function evaluate (opts, args, token) {
   try {
-    var mod = await load(cmd)
-    var fn = mod[args[1]] ? mod[args.shift()] : mod.default
-    var output = await fn(...args)
+    var module = await load(window.cmd)
+    var command = module[args[0]] ? module[args.shift()] : module.default
+    var output = await command(opts, ...args)
 
     if (typeof output === 'undefined' || typeof output === 'string') {
       output = pre(output || 'Ok.')

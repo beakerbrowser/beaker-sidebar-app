@@ -233,13 +233,15 @@ class WebTerm extends LitElement {
       var token = Math.random()
 
       // Refresh iframe before evaluation for clean execution environment
-      this.sandbox.addEventListener('load', send.bind(this))
-      this.sandbox.src = this.sandbox.src
+      var {cwd, sandbox} = this
+      sandbox.addEventListener('load', send)
+      sandbox.src = this.sandbox.src
 
       function send () {
+        var opts = args.shift()
         window.addEventListener('message', listen)
-        window.frames[0].postMessage({type: 'prompt:eval', cwd: this.cwd, cmd, args, token}, '*')
-        this.sandbox.removeEventListener('load', send)
+        window.frames[0].postMessage({type: 'prompt:eval', cwd, cmd, opts, args, token}, '*')
+        sandbox.removeEventListener('load', send)
       }
 
       function listen ({data}) {
