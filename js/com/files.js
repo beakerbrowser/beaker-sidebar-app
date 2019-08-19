@@ -116,6 +116,13 @@ class SidebarFiles extends LitElement {
         </div>
       `
     }
+    const icon = item => {
+      if (item.stat.mount) {
+        return html`<span class="fa-fw fas fa-external-link-square-alt"></span>`
+      }
+      if (item.stat.isDirectory()) return html`<span class="fa-fw fas fa-folder"></span>`
+      return html`<span class="fa-fw far fa-file"></span>`
+    }
     return html`
       <link rel="stylesheet" href="/vendor/beaker-app-stdlib/css/fontawesome.css">
       <div class="toolbar">
@@ -125,6 +132,7 @@ class SidebarFiles extends LitElement {
           <button class="transparent" @click=${this.onClickNewFolder}><span class="fa-fw far fa-folder"></span> New folder</button>
           <button class="transparent" @click=${this.onClickNewFile}><span class="fa-fw far fa-file"></span> New file</button>
           <button class="transparent" @click=${this.onClickImportFiles}><span class="fa-fw fas fa-upload"></span> Import</button>
+          <button class="transparent" @click=${this.onClickMount}><span class="fa-fw fas fa-external-link-square-alt"></span> Mount dat</button>
         `}
       </div>
       <div class="listing" @contextmenu=${this.onContextmenuListing}>
@@ -136,7 +144,7 @@ class SidebarFiles extends LitElement {
         ` : ''}
         ${repeat(this.items, item => html`
           <div class="item" @click=${e => this.onClickItem(e, item)} @contextmenu=${e => this.onContextmenuItem(e, item)}>
-            <span class="icon"><span class="fa-fw ${item.stat.isDirectory() ? 'fas fa-folder' : 'far fa-file'}"></span></span>
+            <span class="icon">${icon(item)}</span>
             <span class="name">${item.name}</span>
             <span class="size">${item.stat.size ? formatBytes(item.stat.size) : ''}</span>
           </div>
@@ -156,6 +164,8 @@ class SidebarFiles extends LitElement {
       x: e.clientX,
       y: e.clientY,
       fontAwesomeCSSUrl: '/vendor/beaker-app-stdlib/css/fontawesome.css',
+      noBorders: true,
+      roomy: true,
       items: [
         {
           icon: 'far fa-fw fa-folder',
@@ -171,6 +181,11 @@ class SidebarFiles extends LitElement {
           icon: 'fas fa-fw fa-upload',
           label: 'Import files',
           click: () => this.onClickImportFiles()
+        },
+        {
+          icon: 'fas fa-fw fa-external-link-square-alt',
+          label: 'Mount dat',
+          click: () => this.onClickMount()
         }
       ]
     })
@@ -181,62 +196,100 @@ class SidebarFiles extends LitElement {
     e.stopPropagation()
 
     var url = joinPath(this.origin, this.folderPath || '', item.name || '')
-    contextMenu.create({
-      x: e.clientX,
-      y: e.clientY,
-      fontAwesomeCSSUrl: '/vendor/beaker-app-stdlib/css/fontawesome.css',
-      items: [
+    var items = [
+      {
+        icon: 'fas fa-fw fa-external-link-alt',
+        label: `Open in new tab`,
+        click: () => {
+          beaker.browser.openUrl(url, {
+            setActive: true,
+            isSidebarActive: true
+          })
+        }
+      },
+      {
+        icon: 'fas fa-fw fa-link',
+        label: `Copy URL`,
+        click () {
+          writeToClipboard(url)
+          toast.create('Copied to your clipboard')
+        }
+      },
+      {
+        icon: 'fa fa-fw fa-i-cursor',
+        label: 'Rename',
+        click: async () => {
+          var newname = prompt(`Enter the new name for this ${item.stat.isDirectory() ? 'folder' : 'file'}`, item.name)
+          if (!newname) return
+          var oldpath = joinPath(this.folderPath, item.name)
+          var newpath = joinPath(this.folderPath, newname)
+          await this.archive.rename(oldpath, newpath)
+          if (oldpath === this.pathname) {
+            beaker.browser.gotoUrl(joinPath(this.origin, newpath))
+          } else {
+            this.load()
+          }
+        }
+      }
+    ]
+    if (item.stat.mount) {
+      items = items.concat([
+        '-',
         {
           icon: 'fas fa-fw fa-external-link-alt',
-          label: `Open in new tab`,
+          label: `Open mount in new tab`,
           click: () => {
-            beaker.browser.openUrl(url, {
+            beaker.browser.openUrl(`dat://${item.stat.mount.key}`, {
               setActive: true,
-              isSidebarActive: true,
-              sidebarPanel: 'files'
+              isSidebarActive: true
             })
           }
         },
         {
           icon: 'fas fa-fw fa-link',
-          label: `Copy URL`,
+          label: `Copy Mount URL`,
           click () {
-            writeToClipboard(url)
+            writeToClipboard(`dat://${item.stat.mount.key}`)
             toast.create('Copied to your clipboard')
           }
         },
         {
-          icon: 'fa fa-fw fa-i-cursor',
-          label: 'Rename',
+          icon: 'fas fa-fw fa-trash',
+          label: `Unmount`,
           click: async () => {
-            var newname = prompt(`Enter the new name for this ${item.stat.isDirectory() ? 'folder' : 'file'}`, item.name)
-            if (!newname) return
-            var oldpath = joinPath(this.folderPath, item.name)
-            var newpath = joinPath(this.folderPath, newname)
-            await this.archive.rename(oldpath, newpath)
-            if (oldpath === this.pathname) {
-              beaker.browser.gotoUrl(joinPath(this.origin, newpath))
-            } else {
-              this.load()
-            }
-          }
-        },
-        {
-          icon: 'fa fa-fw fa-trash',
-          label: 'Delete',
-          click: async () => {
-            if (confirm(`Are you sure you want to delete ${item.name}?`)) {
+            if (confirm(`Are you sure you want to unmount ${item.name}?`)) {
               let path = joinPath(this.folderPath, item.name)
-              if (item.stat.isDirectory()) {
-                await this.archive.rmdir(path, {recursive: true})
-              } else {
-                await this.archive.unlink(path)
-              }
+              await this.archive.unmount(path)
               this.load()
             }
           }
         }
-      ]
+      ])
+    } else {
+      items.push({
+        icon: 'fa fa-fw fa-trash',
+        label: 'Delete',
+        click: async () => {
+          if (confirm(`Are you sure you want to delete ${item.name}?`)) {
+            let path = joinPath(this.folderPath, item.name)
+            if (item.stat.isDirectory()) {
+              await this.archive.rmdir(path, {recursive: true})
+            } else {
+              await this.archive.unlink(path)
+            }
+            this.load()
+          }
+        }
+      })
+    }
+
+    contextMenu.create({
+      x: e.clientX,
+      y: e.clientY,
+      fontAwesomeCSSUrl: '/vendor/beaker-app-stdlib/css/fontawesome.css',
+      noBorders: true,
+      roomy: true,
+      items
     })
   }
 
@@ -297,6 +350,17 @@ class SidebarFiles extends LitElement {
       }
       this.load()
     }
+  }
+
+  async onClickMount (e) {
+    if (this.readOnly) return
+
+    var url = await navigator.selectDatArchiveDialog()
+    if (!url) return
+    var name = await prompt('Enter the mount name')
+    if (!name) return
+    await this.archive.mount(name, url)
+    this.load()
   }
 }
 

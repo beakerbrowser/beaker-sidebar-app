@@ -38,7 +38,7 @@ sidebar-files {
   left: 1px;
   top: 62px;
   bottom: 32px;
-  width: 284px;
+  width: 360px;
   z-index: 1;
   background: #fff;
   border-right: 1px solid #ccc;
