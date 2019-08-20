@@ -43,14 +43,14 @@ class SidebarApp extends LitElement {
 
     // export an API which is called by the browser
     window.sidebarGetCurrentPanel = () => this.view
-    window.sidebarLoad = (url, panel) => {
+    window.sidebarLoad = async (url, panel) => {
       if (url.startsWith('beaker:')) {
         // always show the user's home dat rather than beaker
-        const HOME_DAT = 'dat://pfrazee.com/' // TODO
-        if (this.currentUrl.startsWith(HOME_DAT) && panel && panel === this.view) {
+        const HOME_DAT = await navigator.filesystem.getRootArchive()
+        if (this.currentUrl.startsWith(HOME_DAT.url) && panel && panel === this.view) {
           return // already loaded
         }
-        url = HOME_DAT
+        url = HOME_DAT.url
       }
 
       this.currentUrl = url

@@ -1,7 +1,7 @@
 import { LitElement, html, TemplateResult } from '/vendor/beaker-app-stdlib/vendor/lit-element/lit-element.js'
 import minimist from '/vendor/minimist.1.2.0.js'
 import { createArchive } from '../lib/term-archive-wrapper.js'
-import { joinPath } from '/vendor/beaker-app-stdlib/js/strings.js'
+import { joinPath, DAT_KEY_REGEX } from '/vendor/beaker-app-stdlib/js/strings.js'
 import terminalCSS from '../../css/views/terminal.css.js'
 
 class WebTerm extends LitElement {
@@ -22,6 +22,7 @@ class WebTerm extends LitElement {
     this.env = null
     this.cwd = null
     this.outputHist = []
+    this.homeUrl = null
 
     this.builtins = {
       html,
@@ -29,7 +30,7 @@ class WebTerm extends LitElement {
       appendOutput: this.appendOutput.bind(this),
       getCWD: () => this.cwd,
       setCWD: this.setCWD.bind(this),
-      getHome: () => 'dat://pfrazee.com', // TODO
+      getHome: () => this.homeUrl,
       browser: {
         goto: url => beaker.browser.gotoUrl(url),
         open: (url, panel = 'terminal') => beaker.browser.openUrl(url, {setActive: true, isSidebarActive: true, sidebarPanel: panel}),
@@ -72,6 +73,10 @@ class WebTerm extends LitElement {
   }
 
   async load () {
+    if (!this.homeUrl) {
+      this.homeUrl = (await navigator.filesystem.getRootArchive()).url
+    }
+
     var cwd = this.parseURL(this.url)
     while (cwd.pathame !== '/') {
       try {
@@ -151,7 +156,7 @@ class WebTerm extends LitElement {
     thenCWD = thenCWD || this.cwd
     this.outputHist.push(html`
       <div class="entry">
-        <div class="entry-header">${shortenHash(thenCWD.host)}${thenCWD.pathname}&gt; ${cmd || ''}</div>
+        <div class="entry-header">${this.isHome(thenCWD.host) ? '~' : shortenHash(thenCWD.host)}${thenCWD.pathname}&gt; ${cmd || ''}</div>
         <div class="entry-content">${output}</div>
       </div>
     `)
@@ -215,18 +220,26 @@ class WebTerm extends LitElement {
     this.shadowRoot.querySelector('.prompt input').focus()
   }
 
+  isHome (url) {
+    let a = (url || '').match(DAT_KEY_REGEX)
+    let b = this.homeUrl.match(DAT_KEY_REGEX)
+    return a && a[0] === b[0]
+  }
+
   // rendering
   // =
 
   render () {
     if (!this.cwd) return html`<div></div>`
+    var host = this.isHome(this.cwd.host) ? '~' : shortenHash(this.cwd.host)
     return html`
+      <link rel="stylesheet" href="/vendor/beaker-app-stdlib/css/fontawesome.css">
       <div class="wrapper" @keydown=${this.onKeyDown}>
         <div class="output">
           ${this.outputHist}
         </div>
         <div class="prompt">
-          ${shortenHash(this.cwd.host)}${this.cwd.pathname}&gt; <input @keyup=${this.onPromptKeyUp} />
+          ${host}${this.cwd.pathname}&gt; <input @keyup=${this.onPromptKeyUp} />
         </div>
       </div>
     `
