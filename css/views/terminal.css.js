@@ -35,6 +35,7 @@ audio {
   line-height: 1;
   margin-bottom: 2px;
   font-weight: bold;
+  word-break: break-all;
 }
 
 .output .entry .entry-content {

@@ -93,10 +93,14 @@ Size: ${listing.size}`
 
         // render
         const weight = entry.stat.isDirectory() ? 'bold' : 'normal'
+        const icon =  entry.stat.isDirectory() ? 'far fa-folder' : 'far fa-file'
+        const mountInfo = entry.stat.mount
+          ? env.html` <span style="font-weight: lighter; color: gray">(<span class="fas fa-fw fa-external-link-square-alt"></span>${entry.stat.mount.key.slice(0,4)}..${entry.stat.mount.key.slice(-2)})</span>`
+          : ''
         return env.html`<div><a
           @click=${onclick}
           style="color: ${color}; font-weight: ${weight}"
-        >${entry.name}</a></div>`
+        ><i class="fa-fw ${icon}"></i> ${entry.name}${mountInfo}</a></div>`
       })
   }
 
