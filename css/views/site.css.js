@@ -79,6 +79,10 @@ hr {
   cursor: pointer;
 }
 
+.primary-action .nav a.active {
+  border-bottom: 2px solid #ddd;
+}
+
 .primary-action .nav a:hover {
   background: rgb(245, 245, 245);
 }

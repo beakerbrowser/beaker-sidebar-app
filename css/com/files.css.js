@@ -15,6 +15,14 @@ ${toolbarCSS}
   overflow-y: auto;
 }
 
+.toolbar {
+  padding-left: 5px;
+}
+
+.toolbar > * {
+  margin: 0;
+}
+
 .listing .item {
   display: flex;
   align-items: center;

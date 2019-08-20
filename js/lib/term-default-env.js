@@ -38,7 +38,7 @@ export function help (env) {
       return METHOD_HELP.map(method => {
         var nSpaces = longestMethod + 2 - method.name.length
         var methodEl = env.html`<span>${method.name}${' '.repeat(nSpaces)}</span>`
-        return env.html`<div>${methodEl} <span style="color: gray">${method.description || ''}</span></div>`
+        return env.html`<div>${methodEl} <span style="color: gray; font-weight: lighter">${method.description || ''}</span></div>`
       })
     }
   }

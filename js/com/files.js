@@ -117,9 +117,6 @@ class SidebarFiles extends LitElement {
       `
     }
     const icon = item => {
-      if (item.stat.mount) {
-        return html`<span class="fa-fw fas fa-external-link-square-alt"></span>`
-      }
       if (item.stat.isDirectory()) return html`<span class="fa-fw fas fa-folder"></span>`
       return html`<span class="fa-fw far fa-file"></span>`
     }
@@ -129,10 +126,10 @@ class SidebarFiles extends LitElement {
         ${this.readOnly ? html `
           <div><span class="fas fa-fw fa-info-circle"></span> This site is read-only</div>
         ` : html`
-          <button class="transparent" @click=${this.onClickNewFolder}><span class="fa-fw far fa-folder"></span> New folder</button>
-          <button class="transparent" @click=${this.onClickNewFile}><span class="fa-fw far fa-file"></span> New file</button>
-          <button class="transparent" @click=${this.onClickImportFiles}><span class="fa-fw fas fa-upload"></span> Import</button>
-          <button class="transparent" @click=${this.onClickMount}><span class="fa-fw fas fa-external-link-square-alt"></span> Mount dat</button>
+          <button class="transparent" @click=${this.onClickNewFolder}>New folder</button>
+          <button class="transparent" @click=${this.onClickNewFile}>New file</button>
+          <button class="transparent" @click=${this.onClickImportFiles}>Import files</button>
+          <button class="transparent" @click=${this.onClickMount}>Mount...</button>
         `}
       </div>
       <div class="listing" @contextmenu=${this.onContextmenuListing}>
@@ -145,8 +142,17 @@ class SidebarFiles extends LitElement {
         ${repeat(this.items, item => html`
           <div class="item" @click=${e => this.onClickItem(e, item)} @contextmenu=${e => this.onContextmenuItem(e, item)}>
             <span class="icon">${icon(item)}</span>
-            <span class="name">${item.name}</span>
-            <span class="size">${item.stat.size ? formatBytes(item.stat.size) : ''}</span>
+            <span class="name">
+              ${item.name}
+            </span>
+            <span class="size">
+              ${item.stat.mount
+                ? html`
+                  <span class="fas fa-fw fa-external-link-square-alt"></span>
+                  ${item.stat.mount.key.slice(0,4)}..${item.stat.mount.key.slice(-2)}
+                ` : ''}
+              ${item.stat.size ? formatBytes(item.stat.size) : ''}
+            </span>
           </div>
         `)}
       </div>
@@ -184,7 +190,7 @@ class SidebarFiles extends LitElement {
         },
         {
           icon: 'fas fa-fw fa-external-link-square-alt',
-          label: 'Mount dat',
+          label: 'Mount',
           click: () => this.onClickMount()
         }
       ]

@@ -1,4 +1,5 @@
 import { LitElement, html } from '/vendor/beaker-app-stdlib/vendor/lit-element/lit-element.js'
+import { classMap } from '/vendor/beaker-app-stdlib/vendor/lit-element/lit-html/directives/class-map.js'
 import { repeat } from '/vendor/beaker-app-stdlib/vendor/lit-element/lit-html/directives/repeat.js'
 import * as toast from '/vendor/beaker-app-stdlib/js/com/toast.js'
 import { pluralize } from '/vendor/beaker-app-stdlib/js/strings.js'
@@ -528,17 +529,17 @@ class SidebarSiteView extends LitElement {
         </div>
         <div style="flex: 1"></div>
         <div class="nav">
-          <a @click=${e => this.onSetView(e, 'files')}>
+          <a class=${classMap({active: this.view === 'files'})} @click=${e => this.onSetView(e, 'files')}>
             <span class="far fa-fw fa-file"></span>
             Files
           </a>
           ${this.isPerson ? html`
-            <a @click=${e => this.onSetView(e, 'social')}>
+            <a class=${classMap({active: this.view === 'social'})} @click=${e => this.onSetView(e, 'social')}>
               <span class="far fa-fw fa-user-circle"></span>
               Social
             </a>
           ` : ''}
-          <a @click=${e => this.onSetView(e, 'settings')}>
+          <a class=${classMap({active: this.view === 'settings'})} @click=${e => this.onSetView(e, 'settings')}>
             <span class="fas fa-fw fa-cog"></span>
             Settings
           </a>
