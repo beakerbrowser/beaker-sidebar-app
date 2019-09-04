@@ -21,40 +21,19 @@ ${tooltipCSS}
   height: 21px;
 }
 
-.revision-indicator {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  margin-top: 1px;
-  margin-left: 14px;
-}
-
-.revision-indicator.add { background: #44c35a; }
-.revision-indicator.mod { background: #fac800; }
-.revision-indicator.del { background: #d93229; }
-
-sidebar-files {
+files-explorer {
   position: fixed;
-  left: 1px;
-  top: 62px;
-  bottom: 32px;
-  width: 300px;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 200px;
   z-index: 1;
-  background: #fff;
+  background: #fafafa;
   border-right: 1px solid #ccc;
 }
 
-footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  z-index: 1;
-  border-top: 1px solid #ccc;
-  width: 100%;
-  padding: 0 12px;
-  height: 32px;
-  line-height: 32px;
-  font-family:  Consolas, 'Lucida Console', Monaco, monospace;;
+:host(.files-open) {
+  padding-left: 200px;
 }
 `
 export default cssStr

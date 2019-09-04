@@ -5,13 +5,18 @@ body {
   font-size: 12px;
   background: #fff;
   --border-color: #d4d7dc;
-  border-left: 1px solid #aaa;
+  border-right: 1px solid #aaa;
   min-height: 100vh;
 }
 
 #monaco-editor,
 #monaco-diff-editor {
-  height: calc(100vh - 63px - 32px);
+  height: calc(100vh - 28px);
+  margin-left: 200px;
+}
+
+#monaco-editor.fullwidth {
+  margin-left: 0;
 }
 
 /* editor style tweaks */

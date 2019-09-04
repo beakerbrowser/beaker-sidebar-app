@@ -1,13 +1,17 @@
 import {css} from '/vendor/beaker-app-stdlib/vendor/lit-element/lit-element.js'
 import buttonsCSS from '/vendor/beaker-app-stdlib/css/buttons2.css.js'
-import formCSS from '../form.css.js'
 
 const cssStr = css`
 ${buttonsCSS}
-${formCSS}
 
 :host {
   display: block;
+  border-bottom: 1px solid #ccc;
+  padding: 5px 0;
+}
+
+h5 {
+  margin: 5px 10px;
 }
 
 .content {

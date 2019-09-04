@@ -194,7 +194,7 @@ export async function read (env, opts = {}, location = '') {
   if (/\.(png|jpe?g|gif)$/.test(pathname)) {
     return {toHTML: () => env.html`<img src=${origin + pathname}>`}
   }
-  if (/\.(mp4|webm)$/.test(pathname)) {
+  if (/\.(mp4|webm|mov)$/.test(pathname)) {
     return {toHTML: () => env.html`<video controls><source src=${origin + pathname}></video>`}
   }
   if (/\.(mp3|ogg)$/.test(pathname)) {

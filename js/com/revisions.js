@@ -27,29 +27,27 @@ class SidebarRevisions extends LitElement {
   render () {
     return html`
       <link rel="stylesheet" href="/vendor/beaker-app-stdlib/css/fontawesome.css">
-      <div class="field-group">
-        <div class="field-group-title">Preview mode: ${this.currentDiff.length} unpublished revisions</div>
-        <div class="content">
-          ${repeat(this.currentDiff, filediff => html`
-            <div>
-              <span class="revision-indicator ${filediff.change}"></span>
-              <a class=${filediff.change} @click=${e => this.onClickFile(e, filediff.path)}>${filediff.path}</a>
-            </div>
-          `)}
-        </div>
-        <div class="footer">
-          <button class="transparent" @click=${this.onClickPublish}>
-            <span class="fas fa-fw fa-check"></span> Publish all
+      <h5>Preview mode: ${this.currentDiff.length} unpublished revisions</h5>
+      <div class="content">
+        ${repeat(this.currentDiff, filediff => html`
+          <div>
+            <span class="revision-indicator ${filediff.change}"></span>
+            <a class=${filediff.change} @click=${e => this.onClickFile(e, filediff.path)}>${filediff.path}</a>
+          </div>
+        `)}
+      </div>
+      <div class="footer">
+        <button class="transparent" @click=${this.onClickPublish}>
+          <span class="fas fa-fw fa-check"></span> Publish all
+        </button>
+        <button class="transparent" @click=${this.onClickRevert}>
+          <span class="fas fa-fw fa-undo"></span> Revert all
+        </button>
+        ${this.origin.includes('+preview') ? '' : html`
+          <button class="transparent" @click=${this.onClickView}>
+            <span class="fas fa-fw fa-eye"></span> View
           </button>
-          <button class="transparent" @click=${this.onClickRevert}>
-            <span class="fas fa-fw fa-undo"></span> Revert all
-          </button>
-          ${this.origin.includes('+preview') ? '' : html`
-            <button class="transparent" @click=${this.onClickView}>
-              <span class="fas fa-fw fa-eye"></span> View
-            </button>
-          `}
-        </div>
+        `}
       </div>
     `    
   }

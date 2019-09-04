@@ -74,7 +74,7 @@ class WebTerm extends LitElement {
 
   async load () {
     if (!this.homeUrl) {
-      this.homeUrl = (await navigator.filesystem.getRootArchive()).url
+      this.homeUrl = (await navigator.filesystem.getRoot()).url
     }
 
     var cwd = this.parseURL(this.url)
@@ -89,7 +89,7 @@ class WebTerm extends LitElement {
 
     if (!this.isLoaded) {
       await this.importEnvironment()
-      await this.appendOutput(html`<div><strong>Welcome to webterm 1.0.</strong> Type <code>help</code> if you get lost.</div>`, this.cwd.pathname)
+      await this.appendOutput(html`<div><strong>Welcome to webterm 1.0.</strong> Type <code>help</code> if you get lost.</div><div style="color: gray; font-weight: lighter; font-size: 80%; line-height: 2">Created by Paul Frazee and Brecht Savelkoul</div>`, this.cwd.pathname)
       this.isLoaded = true
     }
 

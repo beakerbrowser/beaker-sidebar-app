@@ -4,9 +4,9 @@ const cssStr = css`
 .toolbar {
   display: flex;
   align-items: center;
-  height: 30px;
-  background: #fff;
-  border-bottom: 1px solid #ccc;
+  height: 26px;
+  background: #f5f5f5;
+  border-bottom: 1px solid #bbb;
 }
 
 .toolbar > * {
@@ -18,7 +18,19 @@ const cssStr = css`
 }
 
 .toolbar button {
-  padding: 3px 8px;
+  padding: 0 8px;
+  height: 26px;
+  line-height: 24px;
+  color: #555;
+  border-radius: 0;
+}
+
+.toolbar button:hover {
+  background: #e5e5e5;
+}
+
+.toolbar button .fa-fw {
+  font-size: 10px;
 }
 
 .toolbar .text {

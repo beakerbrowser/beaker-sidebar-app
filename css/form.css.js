@@ -45,9 +45,6 @@ const cssStr = css`
 
 .field-group {
   position: relative;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-  background: #fff;
   padding: 10px;
   margin-bottom: 10px;
 }

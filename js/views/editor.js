@@ -1,7 +1,7 @@
 import { LitElement, html } from '/vendor/beaker-app-stdlib/vendor/lit-element/lit-element.js'
 import sidebarEditorViewCSS from '../../css/views/editor.css.js'
 import BIN_EXTS from '../binary-extensions.js'
-import '../com/files.js'
+import '/vendor/beaker-app-stdlib/js/com/files-explorer.js'
 
 var editor // monaco instance
 var diffEditor // monaco diff instance
@@ -14,8 +14,7 @@ class SidebarEditorView extends LitElement {
       isFilesOpen: {type: Boolean},
       readOnly: {type: Boolean},
       dne: {type: Boolean},
-      isBinary: {type: Boolean},
-      previewChange: {type: String}
+      isBinary: {type: Boolean}
     }
   }
 
@@ -43,10 +42,6 @@ class SidebarEditorView extends LitElement {
     return 'latest'
   }
 
-  get isViewingPreview () {
-    return this.viewedDatVersion === 'preview'
-  }
-
   get pathname () {
     let urlp = new URL(this.url)
     return urlp.pathname
@@ -63,14 +58,9 @@ class SidebarEditorView extends LitElement {
     this.isLoading = true
     this.isFilesOpen = false
     this.readOnly = true
-    this.previewMode = false
-    this.previewChange = false
     this.dne = false
     this.isBinary = false
     this.resolvedPath = ''
-
-    // turn on live-reloading automatically
-    beaker.browser.toggleLiveReloading(true)
 
     // load monaco
     if (!editor) {
@@ -79,6 +69,7 @@ class SidebarEditorView extends LitElement {
         console.log('monaco loaded')
         // we have load monaco outside of the shadow dom
         let opts = {
+          folding: false,
           renderLineHighlight: 'all',
           lineNumbersMinChars: 4,
           automaticLayout: true,
@@ -117,11 +108,8 @@ class SidebarEditorView extends LitElement {
 
     console.log('Loading', url)
     editor.setValue('')
-    this.setDiffMode(false)
     this.isLoading = true
     this.readOnly = true
-    this.previewMode = false
-    this.previewChange = false
     this.dne = false
     this.isBinary = false
     this.resolvedPath = ''
@@ -141,8 +129,7 @@ class SidebarEditorView extends LitElement {
         manifest = null
       }
       console.log(info)
-      this.previewMode = info.userSettings.previewMode
-      this.readOnly = !info.isOwner || (this.previewMode && !this.isViewingPreview)
+      this.readOnly = !info.isOwner
 
       // readonly if viewing historic version
       if (info.isOwner) {
@@ -174,10 +161,8 @@ class SidebarEditorView extends LitElement {
           body = ''
         }
       }
-
-      // grab the diff if this is preview mode
-      this.updateDiff()
     } else if (url.startsWith('http:') || url.startsWith('https:')) {
+      this.isFilesOpen = false
       try {
         body = await beaker.browser.fetchBody(url)
       } catch (e) {
@@ -185,6 +170,7 @@ class SidebarEditorView extends LitElement {
         body = ''
       }
     } else {
+      this.isFilesOpen = false
       try {
         let res = await fetch(url)
         body = await res.text()
@@ -231,67 +217,27 @@ class SidebarEditorView extends LitElement {
     this.requestUpdate()
   }
 
-  async updateDiff () {
-    if (this.previewMode) {
-      let diffs = await beaker.archives.diffLocalSyncPathListing(this.archive.checkout().url, {
-        compareContent: true,
-        shallow: false,
-        paths: [this.resolvedPath]
-      })
-      var diff = diffs.find(d => d.path === this.resolvedPath)
-      if (diff) {
-        this.previewChange = diff.change
-      } else {
-        this.previewChange = false
-      }
-    } else {
-      this.previewChange = false
-    }
-    this.requestUpdate()
-  }
-
-  async setDiffMode (enabled) {
-    if (!enabled && this.isDiffing) {
-      this.isDiffing = false
-    } else if (enabled && !this.isDiffing) {
-      var leftContent = await this.archive.checkout().readFile(this.resolvedPath).catch(e => '')
-      var rightContent = await this.archive.checkout('preview').readFile(this.resolvedPath).catch(e => '')
-      diffEditor.setModel({
-        original: monaco.editor.createModel(leftContent),
-        modified: monaco.editor.createModel(rightContent)
-      })
-      diffEditor.focus()
-      this.isDiffing = true
-    }
-    document.querySelector('#monaco-editor').style.display = this.isDiffing ? 'none' : 'block'
-    document.querySelector('#monaco-diff-editor').style.display = this.isDiffing ? 'block' : 'none'
-    this.requestUpdate()
-  }
-
   // rendering
   // =
 
   render () {
+    if (this.isFilesOpen) {
+      this.classList.add('files-open')
+      document.querySelector('#monaco-editor').classList.remove('fullwidth')
+    } else {
+      this.classList.remove('files-open')
+      document.querySelector('#monaco-editor').classList.add('fullwidth')
+    }
     if (this.isLoading) {
-      return html`
-        <div class="toolbar">
-          <div>Loading...</div>
-        </div>
-      `
+      return html``
     }
     if (this.readOnly) {
       return html`
         <link rel="stylesheet" href="/vendor/beaker-app-stdlib/css/fontawesome.css">
         <div class="toolbar">
           ${this.isDat ? this.renderToolbarFiles() : ''}
-          ${this.previewMode && !this.isViewingPreview
-            ? html`
-              <div><span class="fas fa-fw fa-info-circle"></span> Viewing latest published version</div>
-              <button class="transparent" @click=${this.onClickGotoPreview}><span class="fas fa-fw fa-hammer"></span> Edit preview</button>
-            ` : html`
-              <div><span class="fas fa-fw fa-info-circle"></span> This page is read-only</div>
-              ${this.isDat ? html`<button class="transparent" @click=${this.onClickFork}><span class="far fa-fw fa-clone"></span> Make an editable copy</button>` : ''}
-            `}
+          <div><span class="fas fa-fw fa-info-circle"></span> This page is read-only</div>
+          ${this.isDat ? html`<button class="transparent" @click=${this.onClickFork}><span class="far fa-fw fa-clone"></span> Make an editable copy</button>` : ''}
           <div class="divider"></div>
         </div>
         ${this.isFilesOpen ? this.renderFilesSidebar() : ''}
@@ -300,7 +246,6 @@ class SidebarEditorView extends LitElement {
             Binary file
           </div>
         ` : ''}
-        <footer>${this.resolvedPath}</footer>
       `
     }
     return html`
@@ -310,7 +255,7 @@ class SidebarEditorView extends LitElement {
         ${this.dne ? html`
           <div style="padding: 0 5px">
             <span class="fas fa-fw fa-info-circle"></span>
-            This page ${this.previewChange === 'del' ? 'has been deleted' : 'does not exist'}.
+            This page does not exist.
           </div>
         ` : html`
           <button class="transparent tooltip-nodelay tooltip-onsmall" title="Save" @click=${this.onClickSave} data-tooltip="Save">
@@ -324,52 +269,16 @@ class SidebarEditorView extends LitElement {
           </button>
         `}
         <span class="divider"></span>
-        ${this.previewMode ? html`
-          ${this.previewChange ? html`
-            <span class="revision-indicator ${this.previewChange}"></span>
-          ` : ''}
-          <button
-            class="transparent tooltip-nodelay tooltip-onsmall"
-            ?disabled=${!this.previewChange}
-            @click=${this.onClickPublish}
-            data-tooltip=${this.previewChange === 'del' ? 'Confirm delete' : 'Publish'}
-          >
-            <span class="fas fa-fw fa-check"></span>
-            <span class="btn-label">${this.previewChange === 'del' ? 'Confirm delete' : 'Publish'}</span>
-          </button>
-          <button
-            class="transparent tooltip-nodelay tooltip-onsmall ${this.isDiffing ? 'pressed' : ''}"
-            ?disabled=${!this.previewChange || this.isBinary}
-            @click=${this.onClickToggleDiff}
-            data-tooltip="Diff"
-          >
-            <span class="fas fa-fw fa-columns"></span>
-            <span class="btn-label">Diff</span>
-          </button>
-          <button
-            class="transparent tooltip-nodelay tooltip-onsmall"
-            ?disabled=${!this.previewChange}
-            @click=${this.onClickRevert}
-            data-tooltip="Revert"
-          >
-            <span class="fas fa-fw fa-undo"></span>
-            <span class="btn-label">Revert</span>
-          </button>
-          <span class="divider"></span>
-        ` : ''}
-        <div class="spacer"></div>
-        <button
-          class="transparent tooltip-nodelay tooltip-left"
-          data-tooltip="Toggle live reloading"
-          @click=${this.onToggleLiveReloading}
-        ><span class="fas fa-fw fa-bolt"></span></button>
+        <button class="transparent tooltip-nodelay tooltip-onsmall" title="View file" @click=${this.onClickView} data-tooltip="Delete">
+          <span class="far fa-fw fa-window-maximize"></span> <span class="btn-label">View file</span>
+        </button>
       </div>
       ${this.isBinary ? html`
         <div class="empty">
           Binary file
         </div>
       ` : ''}
-      ${this.dne && !this.isDiffing ? html`
+      ${this.dne ? html`
         <div class="empty">
           ${this.hasFileExt ? html`
             You can <a href="#" @click=${e => this.onClickCreate(e)}>create a new page here</a>.
@@ -382,14 +291,17 @@ class SidebarEditorView extends LitElement {
         </div>
       ` : ''}
       ${this.isFilesOpen ? this.renderFilesSidebar() : ''}
-      <footer>${this.resolvedPath}</footer>
     `
   }
 
   renderToolbarFiles () {
     return html`
-      <button class="transparent ${this.isFilesOpen ? 'pressed' : ''}" @click=${this.onToggleFilesOpen}>
-        <span class="fas fa-fw fa-sitemap"></span> <span class="btn-label">Files</span>
+      <button class="transparent" @click=${this.onToggleFilesOpen}>
+        ${this.isFilesOpen ? html`
+          <span class="far fa-fw fa-caret-square-left"></span>
+        ` : html`
+          <span class="far fa-fw fa-folder-open"></span> <span class="btn-label">Files</span>
+        `}
       </button>
       <span class="divider"></span>
     `
@@ -397,18 +309,24 @@ class SidebarEditorView extends LitElement {
 
   renderFilesSidebar () {
     return html`
-      <sidebar-files
+      <files-explorer
         fullheight
         url=${this.url}
-      ></sidebar-files>
+        @open=${this.onOpenFile}
+      ></files-explorer>
     `
   }
 
   // events
   // =
 
-  onToggleFilesOpen () {
+  onToggleFilesOpen (e) {
     this.isFilesOpen = !this.isFilesOpen
+  }
+
+  onOpenFile (e) {
+    this.url = e.detail.url
+    this.load()
   }
 
   async onClickCreate (e, ext) {
@@ -447,10 +365,14 @@ class SidebarEditorView extends LitElement {
     this.load()
   }
 
+  onClickView () {
+    beaker.browser.gotoUrl(this.url)
+  }
+
   async onClickSave () {
     if (this.readOnly) return
     await this.archive.writeFile(this.resolvedPath, editor.getModel(this.url).getValue())
-    this.updateDiff()
+    beaker.browser.refreshPage()
   }
 
   async onClickRename () {
@@ -478,30 +400,6 @@ class SidebarEditorView extends LitElement {
     }
   }
 
-  async onClickPublish () {
-    if (!confirm('Publish this change?')) return
-    await beaker.archives.publishLocalSyncPathListing(this.origin, {paths: [this.resolvedPath]})
-    this.load()
-  }
-
-  onClickToggleDiff () {
-    if (this.isBinary) return // dont diff binary
-    this.setDiffMode(!this.isDiffing)
-  }
-
-  async onClickRevert () {
-    if (!confirm('Revert this change?')) return
-    await beaker.archives.revertLocalSyncPathListing(this.origin, {paths: [this.resolvedPath]})
-    this.load()
-  }
-
-  async onClickGotoPreview () {
-    var urlp = new URL(this.url)
-    var parts = urlp.hostname.split('+')
-    urlp.hostname = `${parts[0]}+preview`
-    beaker.browser.gotoUrl(urlp.toString())
-  }
-
   async onClickFork () {
     var archive = await DatArchive.fork(this.url)
     beaker.browser.openUrl(`${archive.url}${this.pathname}`, {
@@ -509,10 +407,6 @@ class SidebarEditorView extends LitElement {
       isSidebarActive: true,
       sidebarPanel: 'editor'
     })
-  }
-
-  onToggleLiveReloading () {
-    beaker.browser.toggleLiveReloading()
   }
 }
 
