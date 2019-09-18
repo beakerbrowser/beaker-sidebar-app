@@ -68,10 +68,10 @@ Size: ${listing.size}`
   } else {
     listing = await archive.readdir(pathname, {stat: true})
     listing.toHTML = () => listing
-      .filter(entry => {
-        if (opts.all || opts.a) return true
-        return entry.name.startsWith('.') === false
-      })
+      // .filter(entry => {
+      //   if (opts.all || opts.a) return true
+      //   return entry.name.startsWith('.') === false
+      // })
       .sort((a, b) => {
         // dirs on top
         if (a.stat.isDirectory() && !b.stat.isDirectory()) return -1

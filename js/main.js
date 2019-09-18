@@ -114,7 +114,7 @@ class SidebarApp extends LitElement {
         ></web-term>
       `
     }
-    return html`todo`
+    return html``
   }
 
   // events
