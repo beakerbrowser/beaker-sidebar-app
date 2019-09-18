@@ -7,7 +7,7 @@ import terminalCSS from '../../css/views/terminal.css.js'
 class WebTerm extends LitElement {
   static get properties () {
     return {
-      url: {type: String}
+      startUrl: {type: String, attribute: 'url'}
     }
   }
 
@@ -18,6 +18,7 @@ class WebTerm extends LitElement {
   constructor () {
     super()
     this.isLoaded = false
+    this.startUrl = ''
     this.url = ''
     this.env = null
     this.cwd = null
@@ -65,9 +66,18 @@ class WebTerm extends LitElement {
     this.addEventListener('click', () => this.setFocus())
   }
 
-  attributeChangedCallback (name, oldval, newval) {
+  async attributeChangedCallback (name, oldval, newval) {
     super.attributeChangedCallback(name, oldval, newval)
     if (name === 'url') {
+      if (!this.url) {
+        if (this.startUrl.startsWith('dat://')) {
+          // adopt starting url
+          this.url = this.startUrl
+        } else {
+          // default to home if not looking at a dat
+          this.url = (await navigator.filesystem.getRoot()).url
+        }
+      }
       this.load()
     }
   }
