@@ -2,9 +2,6 @@ import { LitElement, html, css } from '/vendor/beaker-app-stdlib/vendor/lit-elem
 import * as toast from '/vendor/beaker-app-stdlib/js/com/toast.js'
 import '/vendor/beaker-app-stdlib/js/com/comments/thread.js'
 
-const comments = navigator.importSystemAPI('unwalled-garden-comments')
-const reactions = navigator.importSystemAPI('unwalled-garden-reactions')
-
 class SidebarComments extends LitElement {
   static get properties () {
     return {
@@ -58,7 +55,7 @@ class SidebarComments extends LitElement {
   }
 
   async load () {
-    var cs = await comments.thread(this.url, {filters: {authors: this.feedAuthors}})
+    var cs = await UwG.comments.thread(this.url, {author: this.feedAuthors})
     this.commentCount = countComments(cs)
     await loadCommentReactions(this.feedAuthors, cs)
     this.comments = cs
@@ -88,18 +85,18 @@ class SidebarComments extends LitElement {
   // =
 
   async onAddReaction (e) {
-    await reactions.add(e.detail.topic, e.detail.emoji)
+    await UwG.reactions.add(e.detail.topic, e.detail.emoji)
   }
 
   async onDeleteReaction (e) {
-    await reactions.remove(e.detail.topic, e.detail.emoji)
+    await UwG.reactions.remove(e.detail.topic, e.detail.emoji)
   }
 
   async onSubmitComment (e) {
     // add the new comment
     try {
       var {topic, replyTo, body} = e.detail
-      await comments.add(topic, {replyTo, body})
+      await UwG.comments.add(topic, {replyTo, body})
     } catch (e) {
       alert('Something went wrong. Please let the Beaker team know! (An error is logged in the console.)')
       console.error('Failed to add comment')
@@ -136,9 +133,9 @@ function countComments (comments) {
   return comments.reduce((acc, comment) => acc + 1 + (comment.replies ? countComments(comment.replies) : 0), 0)
 }
 
-async function loadCommentReactions (authors, comments) {
+async function loadCommentReactions (author, comments) {
   await Promise.all(comments.map(async (comment) => {
-    comment.reactions = await reactions.tabulate(comment.url, {filters: {authors}})
-    if (comment.replies) await loadCommentReactions(authors, comment.replies)
+    comment.reactions = await UwG.reactions.tabulate(comment.url, {author})
+    if (comment.replies) await loadCommentReactions(author, comment.replies)
   }))
 }

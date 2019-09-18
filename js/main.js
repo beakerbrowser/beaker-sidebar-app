@@ -5,9 +5,6 @@ import sidebarAppCSS from '../css/main.css.js'
 import './views/editor.js'
 import './views/terminal.js'
 
-const profiles = navigator.importSystemAPI('unwalled-garden-profiles')
-const follows = navigator.importSystemAPI('unwalled-garden-follows')
-
 class SidebarApp extends LitElement {
   static get properties () {
     return {
@@ -69,9 +66,9 @@ class SidebarApp extends LitElement {
       this.rootUrl = (await navigator.filesystem.getRoot()).url
     }
     if (!this.user) {
-      this.user = await profiles.me()
+      this.user = await UwG.profiles.me()
     }
-    this.followedUsers = (await follows.list({filters: {authors: this.user.url}})).map(({topic}) => topic.url)
+    this.followedUsers = (await UwG.follows.list({author: this.user.url})).map(({topic}) => topic.url)
 
     this.isLoading = false
     this.requestUpdate()
