@@ -55,7 +55,7 @@ class SidebarComments extends LitElement {
   }
 
   async load () {
-    var cs = await UwG.comments.thread(this.url, {author: this.feedAuthors})
+    var cs = await uwg.comments.thread(this.url, {author: this.feedAuthors})
     this.commentCount = countComments(cs)
     await loadCommentReactions(this.feedAuthors, cs)
     this.comments = cs
@@ -85,18 +85,18 @@ class SidebarComments extends LitElement {
   // =
 
   async onAddReaction (e) {
-    await UwG.reactions.add(e.detail.topic, e.detail.emoji)
+    await uwg.reactions.add(e.detail.topic, e.detail.emoji)
   }
 
   async onDeleteReaction (e) {
-    await UwG.reactions.remove(e.detail.topic, e.detail.emoji)
+    await uwg.reactions.remove(e.detail.topic, e.detail.emoji)
   }
 
   async onSubmitComment (e) {
     // add the new comment
     try {
       var {topic, replyTo, body} = e.detail
-      await UwG.comments.add(topic, {replyTo, body})
+      await uwg.comments.add(topic, {replyTo, body})
     } catch (e) {
       alert('Something went wrong. Please let the Beaker team know! (An error is logged in the console.)')
       console.error('Failed to add comment')
@@ -135,7 +135,7 @@ function countComments (comments) {
 
 async function loadCommentReactions (author, comments) {
   await Promise.all(comments.map(async (comment) => {
-    comment.reactions = await UwG.reactions.tabulate(comment.url, {author})
+    comment.reactions = await uwg.reactions.tabulate(comment.url, {author})
     if (comment.replies) await loadCommentReactions(author, comment.replies)
   }))
 }

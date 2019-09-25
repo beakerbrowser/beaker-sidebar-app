@@ -66,9 +66,9 @@ class SidebarApp extends LitElement {
       this.rootUrl = (await navigator.filesystem.getRoot()).url
     }
     if (!this.user) {
-      this.user = await UwG.profiles.me()
+      this.user = await uwg.profiles.me()
     }
-    this.followedUsers = (await UwG.follows.list({author: this.user.url})).map(({topic}) => topic.url)
+    this.followedUsers = (await uwg.follows.list({author: this.user.url})).map(({topic}) => topic.url)
 
     this.isLoading = false
     this.requestUpdate()
