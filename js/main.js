@@ -40,7 +40,7 @@ class SidebarApp extends LitElement {
     document.body.addEventListener('auxclick', globalAnchorClickHandler(true))
     document.body.addEventListener('click', globalAnchorClickHandler(false))
     document.body.addEventListener('contextmenu', e => {
-      // e.preventDefault()
+      e.preventDefault()
     })
 
     // export an API which is called by the browser
