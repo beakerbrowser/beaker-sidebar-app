@@ -4,6 +4,8 @@ import { createArchive } from '../lib/term-archive-wrapper.js'
 import { joinPath, DAT_KEY_REGEX } from '/vendor/beaker-app-stdlib/js/strings.js'
 import terminalCSS from '../../css/views/terminal.css.js'
 
+window.addEventListener('keydown', onGlobalKeydown)
+
 class WebTerm extends LitElement {
   static get properties () {
     return {
@@ -63,7 +65,12 @@ class WebTerm extends LitElement {
       }
     }
 
-    this.addEventListener('click', () => this.setFocus())
+    this.addEventListener('click', e => {
+      if (e.path[0] === this) {
+        // click outside of any content, focus the cli
+        this.setFocus()
+      }
+    })
   }
 
   async attributeChangedCallback (name, oldval, newval) {
@@ -298,4 +305,13 @@ customElements.define('web-term', WebTerm)
 
 function shortenHash (str = '') {
   return str.replace(/[0-9a-f]{64}/ig, v => `${v.slice(0, 6)}..${v.slice(-2)}`)
+}
+
+function onGlobalKeydown (e) {
+  var webTerm = document.body.querySelector('sidebar-app').shadowRoot.querySelector('web-term')
+  if (!webTerm) return
+  if (e.key.match(/^[\d\w]$/i) && !e.ctrlKey && !e.metaKey) {
+    // text written, focus the cli
+    webTerm.setFocus()
+  }
 }
