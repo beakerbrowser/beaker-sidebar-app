@@ -5,8 +5,8 @@ const cssStr = css`
   display: flex;
   align-items: center;
   height: 26px;
-  background: #f5f5f5;
-  border-bottom: 1px solid #bbb;
+  background: #222;
+  color: #eee;
 }
 
 .toolbar > * {
@@ -21,12 +21,12 @@ const cssStr = css`
   padding: 0 8px;
   height: 26px;
   line-height: 24px;
-  color: #555;
+  color: inherit;
   border-radius: 0;
 }
 
 .toolbar button:hover {
-  background: #e5e5e5;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .toolbar button .fa-fw {

@@ -8,8 +8,10 @@ const cssStr = css`
   box-sizing: border-box;
   font-family: var(--font);
   padding: 1rem;
-  height: calc(100vh - 31px);
+  height: 100vh;
   overflow-y: auto;
+  background: #222;
+  color: #eee;
 }
 
 a {
@@ -49,7 +51,7 @@ audio {
 
 .output .error-stack {
   padding: 1rem;
-  background: pink;
+  border: 1px solid red;
   font-weight: bold;
   font-size: 12px;
 }
@@ -73,6 +75,7 @@ audio {
   outline: 0;
   border: 0;
   font-family: var(--font);
+  color: inherit;
 }
 `
 export default cssStr

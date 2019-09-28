@@ -18,7 +18,7 @@ const METHOD_HELP = [
 ]
 
 const METHOD_DETAILED_HELP = {
-  ls: html => html`<strong>ls</strong> <span style="color: gray">[-a|--all]</span> {target}`,
+  ls: html => html`<strong>ls</strong> <span style="color: #ccc">[-a|--all]</span> {target}`,
   cd: html => html`<strong>cd</strong> {target}`,
   pwd: html => html`<strong>pwd</strong>`,
   mkdir: html => html`<strong>mkdir</strong> {target}`,
@@ -27,8 +27,8 @@ const METHOD_DETAILED_HELP = {
   rm: html => html`<strong>rm</strong> {target}`,
   read: html => html`<strong>read</strong> {target}`,
   write: html => html`<strong>write</strong> -t|--to {target} {content...}`,
-  go: html => html`<strong>go</strong> <span style="color: gray">[-n]</span> {target}`,
-  edit: html => html`<strong>edit</strong> <span style="color: gray">[-n]</span> {target}`,
+  go: html => html`<strong>go</strong> <span style="color: #ccc">[-n]</span> {target}`,
+  edit: html => html`<strong>edit</strong> <span style="color: #ccc">[-n]</span> {target}`,
 }
 
 export function help (env) {
@@ -38,7 +38,7 @@ export function help (env) {
       return METHOD_HELP.map(method => {
         var nSpaces = longestMethod + 2 - method.name.length
         var methodEl = env.html`<span>${method.name}${' '.repeat(nSpaces)}</span>`
-        return env.html`<div>${methodEl} <span style="color: gray; font-weight: lighter">${method.description || ''}</span></div>`
+        return env.html`<div>${methodEl} <span style="color: #ccc; font-weight: lighter">${method.description || ''}</span></div>`
       })
     }
   }
@@ -60,7 +60,7 @@ export async function ls (env, opts = {}, location = '') {
   var listing
   var st = await archive.stat(pathname)
   if (st.isUnsupportedProtocol) {
-    listing = {toHTML: () => env.html`Unknown endpoint on ${protocol} protocol`}
+    throw new Error(`ls() is not supported on ${protocol} addresses`)
   } else if (st.isFile()) {
     listing = st
     listing.toHTML = () => env.html`Is a file.
@@ -95,7 +95,7 @@ Size: ${listing.size}`
         const weight = entry.stat.isDirectory() ? 'bold' : 'normal'
         const icon =  entry.stat.isDirectory() ? 'far fa-folder' : 'far fa-file'
         const mountInfo = entry.stat.mount
-          ? env.html` <span style="font-weight: lighter; color: gray">(<span class="fas fa-fw fa-external-link-square-alt"></span>${entry.stat.mount.key.slice(0,4)}..${entry.stat.mount.key.slice(-2)})</span>`
+          ? env.html` <span style="font-weight: lighter; color: #ccc">(<span class="fas fa-fw fa-external-link-square-alt"></span>${entry.stat.mount.key.slice(0,4)}..${entry.stat.mount.key.slice(-2)})</span>`
           : ''
         return env.html`<div><a
           @click=${onclick}

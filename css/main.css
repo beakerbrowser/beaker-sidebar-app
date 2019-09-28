@@ -3,9 +3,8 @@
 
 body {
   font-size: 12px;
-  background: #fff;
+  background: #222;
   --border-color: #d4d7dc;
-  border-right: 1px solid #aaa;
   min-height: 100vh;
 }
 

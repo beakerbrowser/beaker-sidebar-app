@@ -10,12 +10,12 @@ const cssStr = css`
   top: 1px;
   right: 2px;
   padding: 5px;
-  color: #333;
+  color: #fff;
   border-radius: 3px;
 }
 
 .close-btn:hover {
-  background: #eee;
+  background: rgba(255, 255, 255, 0.1);
 }
 `
 export default cssStr

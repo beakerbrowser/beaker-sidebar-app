@@ -76,6 +76,7 @@ class SidebarEditorView extends LitElement {
           fixedOverflowWidgets: true,
           roundedSelection: false,
           minimap: {enabled: false},
+          theme: 'vs-dark',
           value: ''
         }
         editor = monaco.editor.create(document.querySelector('#monaco-editor'), opts)

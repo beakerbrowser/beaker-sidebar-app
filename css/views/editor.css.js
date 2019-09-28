@@ -10,6 +10,8 @@ ${tooltipCSS}
 
 :host {
   display: block;
+  background: #222;
+  color: #eee;
 }
 
 .empty {
@@ -17,7 +19,7 @@ ${tooltipCSS}
 }
 
 .divider {
-  border-left: 1px solid #ddd;
+  border-left: 1px solid rgba(255, 255, 255, .4);
   height: 21px;
 }
 
@@ -28,8 +30,7 @@ files-explorer {
   bottom: 0;
   width: 200px;
   z-index: 1;
-  background: #fafafa;
-  border-right: 1px solid #ccc;
+  background: #222;
 }
 
 :host(.files-open) {
