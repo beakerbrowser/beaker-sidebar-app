@@ -13,7 +13,7 @@ const METHOD_HELP = [
   {name: 'rm', description: 'Remove a file or folder'},
   {name: 'read', description: 'Output the contents of a file'},
   {name: 'write', description: 'Write to a file'},
-  {name: 'go', description: 'Open the target in the browser'},
+  {name: 'go', description: 'Go to the target in the browser'},
   {name: 'edit', description: 'Edit the target in the browser'},
 ]
 
@@ -220,6 +220,7 @@ export async function go (env, opts = {}, location = '') {
   }
   if (opts.n && !location) location = opts.n
   location = resolve(env, location, true)
+  await env.setCWD(resolve(env, location, true))
   if (opts.n) {
     await env.browser.open(location)
   } else {
