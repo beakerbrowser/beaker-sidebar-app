@@ -63,7 +63,7 @@ class SidebarApp extends LitElement {
   async load () {
     this.isLoading = true
     if (!this.rootUrl) {
-      this.rootUrl = (await navigator.filesystem.getRoot()).url
+      this.rootUrl = (await navigator.filesystem.get()).url
     }
     if (!this.user) {
       this.user = await uwg.profiles.me()
