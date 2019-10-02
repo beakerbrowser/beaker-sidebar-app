@@ -1,8 +1,14 @@
 import { LitElement, html, TemplateResult } from '/vendor/beaker-app-stdlib/vendor/lit-element/lit-element.js'
+import { unsafeHTML } from '/vendor/beaker-app-stdlib/vendor/lit-element/lit-html/directives/unsafe-html.js'
 import minimist from '/vendor/minimist.1.2.0.js'
+import { Cliclopts } from '/vendor/cliclopts.1.1.1.js'
 import { createArchive } from '../lib/term-archive-wrapper.js'
-import { joinPath, DAT_KEY_REGEX } from '/vendor/beaker-app-stdlib/js/strings.js'
+import { joinPath, DAT_KEY_REGEX, makeSafe } from '/vendor/beaker-app-stdlib/js/strings.js'
 import terminalCSS from '../../css/views/terminal.css.js'
+import '../lib/term-icon.js'
+
+const THEME_PATH = '/Terminal/theme.css'
+const COMMANDS_PATH = '/Terminal/commands'
 
 window.addEventListener('keydown', onGlobalKeydown)
 
@@ -22,23 +28,22 @@ class WebTerm extends LitElement {
     this.isLoaded = false
     this.startUrl = ''
     this.url = ''
-    this.env = null
-    this.cwd = null
+    this.commands = {}
+    this.commandModules = {}
+    this.cwd = undefined
     this.outputHist = []
-    this.homeUrl = null
+    this.fs = undefined
 
-    this.builtins = {
-      html,
-      evalCommand: this.evalCommand.bind(this),
-      appendOutput: this.appendOutput.bind(this),
-      getCWD: () => this.cwd,
-      setCWD: this.setCWD.bind(this),
-      getHome: () => this.homeUrl,
-      browser: {
-        goto: url => beaker.browser.gotoUrl(url),
-        open: (url, panel = 'terminal') => beaker.browser.openUrl(url, {setActive: true, isSidebarActive: true, sidebarPanel: panel}),
-        openSidebar: panel => beaker.browser.openSidebar(panel),
-      }
+    var getCWD = () => this.cwd
+    var setCWD = this.setCWD.bind(this)
+    window.terminal = {
+      get cwd () {
+        return getCWD()
+      },
+      set cwd (v) {
+        return setCWD(v)
+      },
+      resolve: this.resolve.bind(this)
     }
 
     this.commandHist = {
@@ -90,14 +95,14 @@ class WebTerm extends LitElement {
   }
 
   async load () {
-    if (!this.homeUrl) {
-      this.homeUrl = (await navigator.filesystem.get()).url
+    if (!this.fs) {
+      this.fs = await navigator.filesystem.get()
     }
 
     var cwd = this.parseURL(this.url)
     while (cwd.pathame !== '/') {
       try {
-        let st = await cwd.archive.stat(cwd.pathname)
+        let st = await (createArchive(cwd.origin)).stat(cwd.pathname)
         if (st.isDirectory()) break
       } catch (e) { /* ignore */ }
       cwd.pathname = cwd.pathname.split('/').slice(0, -1).join('/')
@@ -106,7 +111,7 @@ class WebTerm extends LitElement {
 
     if (!this.isLoaded) {
       await this.importEnvironment()
-      await this.appendOutput(html`<div><strong>Welcome to webterm 1.0.</strong> Type <code>help</code> if you get lost.</div><div style="color: gray; font-weight: lighter; font-size: 80%; line-height: 2">Created by Paul Frazee and Brecht Savelkoul</div>`, this.cwd.pathname)
+      await this.appendOutput(html`<div><strong>Welcome to webterm 1.0.</strong> Type <code>help</code> if you get lost.</div>`, this.cwd.pathname)
       this.isLoaded = true
     }
 
@@ -115,21 +120,83 @@ class WebTerm extends LitElement {
   }
 
   async importEnvironment () {
+    this.loadTheme()
+    this.loadCommands()
+    this.loadBuiltins()
+  }
+
+  async loadTheme() {
+    // load theme
     try {
-      var module = await import('/js/lib/term-default-env.js')
-      var env = Object.assign({}, module)
-      for (let k in this.builtins) {
-        Object.defineProperty(env, k, {value: this.builtins[k], enumerable: false})
-      }
-      this.env = env
-      console.log('Environment', env)
-    } catch (err) {
-      console.error(err)
-      return appendError('Failed to evaluate environment script', err, this.cwd)
+      let themeSheet = new CSSStyleSheet()
+      let themeCSS = await this.fs.readFile(THEME_PATH)
+      themeSheet.replace(themeCSS)
+      this.shadowRoot.adoptedStyleSheets = Array.from(this.shadowRoot.adoptedStyleSheets).concat(themeSheet)
+    } catch (e) {
+      console.log('Failed to load theme css', e)
     }
   }
 
-  async setCWD (location) {
+  async loadCommands () {
+    var packageNames = []
+    try { packageNames = await this.fs.readdir(COMMANDS_PATH) }
+    catch (err) {
+      this.appendError(`Failed to read commands directory at ${COMMANDS_PATH}`, err)
+    }
+    for (let packageName of packageNames) {
+      let manifest
+      try {
+        manifest = JSON.parse(await this.fs.readFile(joinPath(COMMANDS_PATH, packageName, 'dat.json')))
+      } catch (err) {
+        this.appendError(`Failed to read manifest of command: ${packageName}`, err)
+        continue
+      }
+
+      if (manifest.type !== 'unwalled.garden/command-package') {
+        this.appendError(`Skipping ${packageName}, not a command package (type is ${manifest.type}, should be unwalled.garden/command-package)`)
+        continue
+      }
+
+      let config = manifest['unwalled.garden/command-package']
+      if (!config || !config.commands || !Array.isArray(config.commands) || config.commands.length === 0) {
+        this.appendError(`Skipping ${packageName}, no commands found`)
+        continue
+      }
+
+      try {
+        this.commandModules[packageName] = await import(joinPath(this.fs.url, COMMANDS_PATH, packageName, 'index.js'))
+      } catch (err) {
+        this.appendError(`Failed to load ${packageName} index.js`, err)
+        continue
+      }
+
+      for (let command of config.commands) {
+        if (!command.name) continue
+        let fullName = `${packageName}.${command.name}`
+        let commandData = {
+          package: packageName,
+          name: command.name,
+          help: command.help,
+          usage: command.usage,
+          options: command.options
+        }
+        this.commands[fullName] = commandData
+        if (!(command.name in this.commands)) {
+          this.commands[command.name] = commandData
+        }
+      }
+    }
+  }
+
+  async loadBuiltins () {
+    this.commandModules.builtins = {help: this.help.bind(this)}
+    this.commands.help = {
+      package: 'builtins',
+      name: 'help'
+    }
+  }
+
+  setCWD (location) {
     var locationParsed
     if (location.startsWith('dat://')) {
       try {
@@ -139,41 +206,53 @@ class WebTerm extends LitElement {
         location = `${this.cwd.host}${joinPath(this.cwd.pathname, location)}`
       }
       locationParsed = new URL('dat://' + location)
-      console.log(locationParsed.toString())
     } else {
       locationParsed = new URL(location)
     }
 
-    // make sure the destination exists
-    let archive = createArchive(locationParsed.toString())
-    let st = await archive.stat(locationParsed.pathname)
-    if (!st.isDirectory()) {
-      throw new Error('Not a directory')
-    }
-
     this.url = location
-    this.cwd = this.parseURL(this.url)
+    this.cwd = locationParsed
   }
 
   parseURL (url) {
     if (!url.includes('://')) url = 'dat://' + url
-    let urlp = new URL(url)
-    let archive = createArchive(urlp.origin)
-    return {url, origin: urlp.origin, host: urlp.hostname, pathname: urlp.pathname, archive}
+    return new URL(url)
   }
 
-  appendOutput (output, thenCWD, cmd) {
+  async appendOutput (output, thenCWD, cmd) {
+    // create the place in the history
+    var outputHistIndex = this.outputHist.length
+    this.outputHist.push(html``)
+
+    // show a spinner for promises
+    if (output instanceof Promise) {
+      this.outputHist.splice(outputHistIndex, 1, html`
+        <div class="entry">
+          <div class="entry-header">${this.isFSRoot(thenCWD.host) ? '~' : shortenHash(thenCWD.host)}${thenCWD.pathname}&gt; ${cmd || ''}</div>
+          <div class="entry-content"><span class="spinner"></span></div>
+        </div>
+      `)
+      this.requestUpdate()
+
+      try {
+        output = await output
+      } catch (err) {
+        output = html`<div class="error"><div class="error-header">Command error</div><div class="error-stack">${err.toString()}</div></div>`
+      }
+    }
+
+    // finished, render/replace with final output
     if (typeof output === 'undefined') {
       output = 'Ok.'
     } else if (output.toHTML) {
-      output = output.toHTML()
+      output = unsafeHTML(output.toHTML())
     } else if (typeof output !== 'string' && !(output instanceof TemplateResult)) {
       output = JSON.stringify(output).replace(/^"|"$/g, '')
     }
     thenCWD = thenCWD || this.cwd
-    this.outputHist.push(html`
+    this.outputHist.splice(outputHistIndex, 1, html`
       <div class="entry">
-        <div class="entry-header">${this.isHome(thenCWD.host) ? '~' : shortenHash(thenCWD.host)}${thenCWD.pathname}&gt; ${cmd || ''}</div>
+        <div class="entry-header">${this.isFSRoot(thenCWD.host) ? '~' : shortenHash(thenCWD.host)}${thenCWD.pathname}&gt; ${cmd || ''}</div>
         <div class="entry-content">${output}</div>
       </div>
     `)
@@ -193,54 +272,122 @@ class WebTerm extends LitElement {
     this.requestUpdate()
   }
 
-  parseCommand (str) {
-    // parse the command
-    var parts = str.split(' ')
-    var cmd = parts[0]
-    var argsParsed = minimist(parts.slice(1))
-    console.log(JSON.stringify(argsParsed))
-
-    // form the js call
-    var args = argsParsed._
-    delete argsParsed._
-    args.unshift(argsParsed) // opts always go first
-
-    return `this.env[${JSON.stringify(cmd)}](this.env, ${args.map(JSON.stringify).join(', ')})`
-  }
-
-  evalPrompt () {
+  async evalPrompt () {
     var prompt = this.shadowRoot.querySelector('.prompt input')
     if (!prompt.value.trim()) {
       return
     }
     this.commandHist.add(prompt.value)
-    this.evalCommand(prompt.value)
+    var inputValue = prompt.value
+    var args = prompt.value.split(' ')
     prompt.value = ''
-  }
-  
-  async evalCommand (command) {
+
+    var commandName = args[0]
+    var command = this.commands[commandName]
+    if (!command) {
+      this.appendError(`Command not found: ${commandName}`, '', this.cwd, commandName)
+      return false
+    }
+
+    var cliclopts = new Cliclopts(command.options)
+    var argv = minimist(args.slice(1), cliclopts.options())
+    var restArgs = argv._
+    delete argv._
     try {
-      var res
-      var oldCWD = Object.assign({}, this.cwd)
-      var codeToEval = this.parseCommand(command)
-      res = await eval(codeToEval)
-      this.appendOutput(res, oldCWD, command)
+      var oldCWD = new URL(this.cwd.toString())
+      var res = this.commandModules[command.package][command.name](argv, ...restArgs)
+      this.appendOutput(res, oldCWD, inputValue)
     } catch (err) {
-      if (err.toString().startsWith('TypeError: this.env')) {
-        err = `Invalid command: ${command}`
-      }
-      this.appendError('Command error', err, oldCWD, command)
+      this.appendError('Command error', err, oldCWD, inputValue)
     }
   }
-
+  
   setFocus () {
     this.shadowRoot.querySelector('.prompt input').focus()
   }
 
-  isHome (url) {
+  isFSRoot (url) {
     let a = (url || '').match(DAT_KEY_REGEX)
-    let b = this.homeUrl.match(DAT_KEY_REGEX)
+    let b = this.fs.url.match(DAT_KEY_REGEX)
     return a && a[0] === b[0]
+  }
+
+  // userland-facing methods
+  // =
+
+  resolve (location) {
+    const cwd = this.cwd
+  
+    // home
+    if (location.startsWith('~')) {
+      location = joinPath(this.fs.url, location.slice(1))
+    }
+  
+    // relative paths
+    if (location.startsWith('./')) {
+      location = location.slice(2) // remove starting ./
+    }
+    if (!location.startsWith('/') && !location.includes('://')) {
+      location = joinPath(cwd.pathname, location)
+    }
+  
+    if (!location.includes('://')) {
+      // .. up navs
+      let parts = location.split('/')
+      for (let i = 0; i < parts.length; i++) {
+        if (parts[i] === '..') {
+          if (parts[i - 1]) {
+            // remove parent
+            parts.splice(i - 1, 1)
+            i--
+          }
+          // remove '..'
+          parts.splice(i, 1)
+          i--
+        }
+      }
+      location = parts.join('/')
+      location = joinPath(cwd.origin, location)
+    }
+  
+    return location
+  }
+
+  help (opts, topic) {
+    var commands = []
+    var sourceSet
+    var commandNameLen = 0
+    const includeDetails = !!topic
+
+    if (topic) {
+      if (!(topic in this.commands)) {
+        throw new Error(`Not a command: ${topic}`)
+      }
+      sourceSet = {[topic]: this.commands[topic]}
+    } else {
+      sourceSet = this.commands
+    }
+
+    for (let id in sourceSet) {
+      if (id === 'help' || (!topic && id.includes('.'))) continue
+      commandNameLen = Math.max(this.commands[id].name.length, commandNameLen)
+      commands.push(this.commands[id])
+    }
+    
+    return {
+      commands,
+      toHTML () {
+        return commands
+          .map(command => {
+            var summary = `<strong>${makeSafe(command.name).padEnd(commandNameLen + 2)}</strong> ${makeSafe(command.help || '')} <small class="color-gray">package: ${makeSafe(command.package)}</small>`
+            if (!includeDetails || (!command.usage && !command.options)) return summary
+            var cliclopts = new Cliclopts(command.options)
+
+            return `${summary}\n\nUsage: ${makeSafe(command.usage || '')}\n${makeSafe(cliclopts.usage())}`
+          })
+          .join('\n')
+      }
+    }
   }
 
   // rendering
@@ -248,7 +395,7 @@ class WebTerm extends LitElement {
 
   render () {
     if (!this.cwd) return html`<div></div>`
-    var host = this.isHome(this.cwd.host) ? '~' : shortenHash(this.cwd.host)
+    var host = this.isFSRoot(this.cwd.host) ? '~' : shortenHash(this.cwd.host)
     return html`
       <link rel="stylesheet" href="/vendor/beaker-app-stdlib/css/fontawesome.css">
       <div class="wrapper" @keydown=${this.onKeyDown}>

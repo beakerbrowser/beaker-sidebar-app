@@ -1,7 +1,19 @@
 import {css} from '/vendor/beaker-app-stdlib/vendor/lit-element/lit-element.js'
+import spinnerCSS from '/vendor/beaker-app-stdlib/css/com/spinner.css.js'
 
 const cssStr = css`
+${spinnerCSS}
+
 :host {
+  --default: #eee;
+  --background: #222;
+  --lightgray: #aaa;
+  --gray: gray;
+  --darkgray: #555;
+  --error: #f00;
+  --success: #0f0;
+  --warning: #ff0;
+  --info: #00f;
   --font: Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace, serif;
 
   display: block;
@@ -10,13 +22,14 @@ const cssStr = css`
   padding: 1rem;
   height: 100vh;
   overflow-y: auto;
-  background: #222;
-  color: #eee;
+  background: var(--background);
+  color: var(--default);
 }
 
 a {
   text-decoration: none;
   cursor: pointer;
+  color: inherit;
 }
 
 a:hover {
@@ -42,16 +55,17 @@ audio {
 
 .output .entry .entry-content {
   white-space: pre;
+  word-break: break-word;
 }
 
 .output .error {
   white-space: normal;
-  color: red;
+  color: var(--error);
 }
 
 .output .error-stack {
   padding: 1rem;
-  border: 1px solid red;
+  border: 1px solid var(--error);
   font-weight: bold;
   font-size: 12px;
 }
@@ -77,5 +91,39 @@ audio {
   font-family: var(--font);
   color: inherit;
 }
+
+.color-default { color: var(--default); }
+.color-background { color: var(--background); }
+.color-lightgray { color: var(--lightgray); }
+.color-gray { color: var(--gray); }
+.color-darkgray { color: var(--darkgray); }
+.color-error { color: var(--error); }
+.color-warning { color: var(--warning); }
+.color-success { color: var(--success); }
+.color-info { color: var(--info); }
+
+.bg-default { background: var(--default); }
+.bg-background { background: var(--background); }
+.bg-lightgray { background: var(--lightgray); }
+.bg-gray { background: var(--gray); }
+.bg-darkgray { background: var(--darkgray); }
+.bg-error { background: var(--error); }
+.bg-warning { background: var(--warning); }
+.bg-success { background: var(--success); }
+.bg-info { background: var(--info); }
+.bg-background { background: var(--background); }
+
+.border-default { border: 1px solid var(--default); }
+.border-lightgray { border: 1px solid var(--lightgray); }
+.border-gray { border: 1px solid var(--gray); }
+.border-darkgray { border: 1px solid var(--darkgray); }
+.border-error { border: 1px solid var(--error); }
+.border-warning { border: 1px solid var(--warning); }
+.border-success { border: 1px solid var(--success); }
+.border-info { border: 1px solid var(--info); }
+
+.weight-thin { font-weight: 400; }
+.weight-normal { font-weight: 500; }
+.weight-bold { font-weight: 600; }
 `
 export default cssStr
